@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Device Pulse — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #15181c;
+    --panel: #1d2126;
+    --panel-raised: #242a30;
+    --panel-inset: #191d21;
+    --border: #333b42;
+    --border-soft: #2a3036;
+    --text-primary: #e9edf0;
+    --text-muted: #8a939c;
+    --text-dim: #5b646c;
+    --amber: #ffb238;
+    --amber-dim: #6b5426;
+    --cyan: #45d6c4;
+    --cyan-dim: #1f4d47;
+    --red: #ff5c5c;
+    --red-dim: #5c2b2b;
+    --grid-line: rgba(255,255,255,0.035);
+    --radius-panel: 3px;
+    --radius-chip: 2px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; }
+
+  body{
+    background:
+      linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0/24px 24px,
+      var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    padding: 0 0 120px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection{ background: var(--amber); color: #15181c; }
+  a{ color: var(--cyan); }
+
+  .wrap{ max-width: 1240px; margin: 0 auto; padding: 0 40px; }
+
+  .hero{
+    padding: 88px 0 64px;
+    border-bottom: 1px solid var(--border-soft);
+    position: relative;
+  }
+  .eyebrow{
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--amber);
+    text-transform: uppercase;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom: 20px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:7px; height:7px; border-radius:50%;
+    background: var(--amber);
+    box-shadow: 0 0 0 3px var(--amber-dim);
+  }
+  h1.title{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 56px;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    max-width: 780px;
+  }
+  .hero p.sub{
+    margin-top: 22px;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 560px;
+  }
+  .hero-trace{ position:absolute; right: 40px; top: 100px; width: 320px; }
+
+  section{ padding: 72px 0; border-bottom: 1px solid var(--border-soft); }
+  .section-head{ display:flex; align-items: baseline; gap: 18px; margin-bottom: 40px; }
+  .section-num{ font-family: var(--font-mono); font-size: 13px; color: var(--text-dim); }
+  .section-title{ font-family: var(--font-display); font-size: 26px; font-weight: 600; }
+  .section-desc{ color: var(--text-muted); font-size: 14.5px; margin-top: 10px; max-width: 640px; line-height: 1.6; }
+
+  .swatch-grid{ display:grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .swatch{ border: 1px solid var(--border-soft); border-radius: var(--radius-panel); overflow: hidden; background: var(--panel); }
+  .swatch-fill{ height: 74px; }
+  .swatch-meta{ padding: 10px 12px; }
+  .swatch-name{ font-size: 12.5px; font-weight: 500; }
+  .swatch-hex{ font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+
+  .type-row{ display:flex; align-items: baseline; justify-content: space-between; padding: 22px 0; border-top: 1px solid var(--border-soft); gap: 24px; }
+  .type-row:first-of-type{ border-top: none; }
+  .type-sample{ font-family: var(--font-display); }
+  .type-meta{ font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); white-space: nowrap; text-align: right; }
+  .type-meta span{ display:block; }
+
+  .mono-block{
+    font-family: var(--font-mono); font-size: 13px; color: var(--cyan);
+    background: var(--panel-inset); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-panel); padding: 16px 18px; margin-top: 28px;
+    line-height: 1.8; letter-spacing: 0.02em;
+  }
+  .mono-block .dim{ color: var(--text-dim); }
+
+  .panel{ position: relative; background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius-panel); padding: 22px; }
+  .bracket{ position: relative; }
+  .bracket .bl, .bracket .br, .bracket .tl, .bracket .tr{
+    content:''; position:absolute; width:10px; height:10px;
+    border-color: var(--text-dim); border-style: solid; border-width: 0;
+  }
+  .bracket .tl{ top:-1px; left:-1px; border-top-width:1px; border-left-width:1px; }
+  .bracket .tr{ top:-1px; right:-1px; border-top-width:1px; border-right-width:1px; }
+  .bracket .bl{ bottom:-1px; left:-1px; border-bottom-width:1px; border-left-width:1px; }
+  .bracket .br{ bottom:-1px; right:-1px; border-bottom-width:1px; border-right-width:1px; }
+
+  .comp-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  .comp-card{ background: var(--panel); border:1px solid var(--border-soft); border-radius: var(--radius-panel); padding: 24px; display:flex; flex-direction:column; gap:16px; }
+  .comp-label{ font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .btn{
+    font-family: var(--font-mono); font-size: 12.5px; letter-spacing: 0.04em;
+    padding: 11px 18px; border-radius: var(--radius-chip); border: 1px solid transparent;
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer; width: fit-content;
+  }
+  .btn-primary{ background: var(--amber); color: #17130a; font-weight:600; }
+  .btn-secondary{ background: transparent; border-color: var(--border); color: var(--text-primary); }
+  .btn-ghost{ background: transparent; color: var(--text-muted); }
+  .btn-danger{ background: transparent; border-color: var(--red-dim); color: var(--red); }
+
+  .chip{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.03em;
+    padding: 5px 10px 5px 8px; border-radius: 20px; border: 1px solid;
+    width: fit-content;
+  }
+  .chip-dot{ width:6px; height:6px; border-radius:50%; }
+  .chip.connected{ color: var(--cyan); border-color: var(--cyan-dim); background: rgba(69,214,196,0.06); }
+  .chip.connected .chip-dot{ background: var(--cyan); box-shadow: 0 0 0 3px var(--cyan-dim); }
+  .chip.connecting{ color: var(--amber); border-color: var(--amber-dim); background: rgba(255,178,56,0.06); }
+  .chip.connecting .chip-dot{ background: var(--amber); box-shadow: 0 0 0 3px var(--amber-dim); }
+  .chip.reconnecting{ color: var(--amber); border-color: var(--amber-dim); background: rgba(255,178,56,0.06); }
+  .chip.reconnecting .chip-dot{ background: var(--amber); animation: blink 1.1s steps(1) infinite; }
+  .chip.disconnected{ color: var(--text-dim); border-color: var(--border); background: transparent; }
+  .chip.disconnected .chip-dot{ background: var(--text-dim); }
+  .chip.error{ color: var(--red); border-color: var(--red-dim); background: rgba(255,92,92,0.06); }
+  .chip.error .chip-dot{ background: var(--red); box-shadow: 0 0 0 3px var(--red-dim); }
+  @keyframes blink{ 50%{ opacity:0.25; } }
+
+  .signal-trace{ display:flex; align-items:center; gap:8px; }
+  .signal-trace svg{ display:block; }
+  .signal-trace .trace-label{ font-family: var(--font-mono); font-size: 10.5px; color: var(--text-dim); }
+
+  .field{ display:flex; flex-direction:column; gap:7px; }
+  .field label{ font-family: var(--font-mono); font-size: 10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--text-dim); }
+  .field input, .field select{
+    background: var(--panel-inset); border: 1px solid var(--border); border-radius: var(--radius-chip);
+    padding: 10px 12px; color: var(--text-primary); font-family: var(--font-mono); font-size: 13px; width:100%;
+  }
+  .field .hint{ font-size: 11px; color: var(--text-dim); font-family: var(--font-body); }
+
+  .readout{ display:flex; flex-direction:column; gap:8px; }
+  .readout .label-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .readout .value{ font-family: var(--font-mono); font-size: 34px; font-weight:500; letter-spacing: -0.01em; }
+  .readout .unit{ font-size: 15px; color: var(--text-dim); margin-left: 4px; }
+  .readout .label{ font-family: var(--font-mono); font-size: 10.5px; letter-spacing:0.08em; text-transform:uppercase; color: var(--text-dim); }
+
+  .log-entry{ display:flex; gap:14px; padding: 11px 0; border-top: 1px solid var(--border-soft); font-size: 12.5px; }
+  .log-entry:first-child{ border-top:none; }
+  .log-time{ font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space:nowrap; padding-top:1px; }
+  .log-text{ color: var(--text-muted); }
+  .log-text b{ color: var(--text-primary); font-weight:500; }
+
+  .screens-row{ display:flex; gap: 32px; align-items: flex-start; overflow-x:auto; padding-bottom: 20px; }
+  .phone{
+    flex: 0 0 auto; width: 320px; height: 660px; background: #0e1013;
+    border: 6px solid #0a0c0e; border-radius: 34px; overflow: hidden; position: relative;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+  }
+  .phone-screen{
+    position:absolute; inset:0; overflow-y:auto; background: var(--bg);
+    background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+  .phone-caption{ font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); margin-top: 16px; text-align:center; }
+  .phone-col{ display:flex; flex-direction:column; align-items:center; flex: 0 0 auto; }
+
+  .statusbar{ display:flex; justify-content:space-between; padding: 16px 20px 8px; font-family: var(--font-mono); font-size: 10.5px; color: var(--text-dim); }
+  .screen-pad{ padding: 4px 18px 24px; }
+  .screen-title{ font-family: var(--font-display); font-size: 20px; font-weight:600; margin: 6px 0 4px; }
+  .screen-sub{ font-size: 11.5px; color: var(--text-dim); font-family: var(--font-mono); }
+
+  .device-row{ display:flex; justify-content:space-between; align-items:center; padding: 14px 4px; border-top: 1px solid var(--border-soft); }
+  .device-row:first-of-type{ border-top:none; }
+  .device-name{ font-size: 13.5px; font-weight:500; }
+  .device-topic{ font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-top:3px; }
+  .device-val{ text-align:right; }
+  .device-val .v{ font-family: var(--font-mono); font-size: 15px; }
+  .device-val .u{ font-size: 10.5px; color: var(--text-dim); }
+
+  .search-bar{ background: var(--panel-inset); border: 1px solid var(--border-soft); border-radius: var(--radius-chip); padding: 9px 12px; font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); margin: 14px 0 6px; }
+  .toolbar-status{ display:flex; justify-content:space-between; align-items:center; background: var(--panel); border:1px solid var(--border-soft); border-radius: var(--radius-panel); padding: 12px 14px; margin-bottom: 18px; }
+
+  .empty-state{ display:flex; flex-direction:column; align-items:center; text-align:center; padding: 90px 24px 0; }
+  .empty-glyph{ margin-bottom: 24px; opacity: 0.7; }
+  .empty-title{ font-family: var(--font-display); font-size: 17px; font-weight:600; margin-bottom:8px; }
+  .empty-body{ font-size: 12.5px; color: var(--text-muted); line-height:1.6; max-width: 240px; }
+  .empty-body b{ color: var(--amber); font-weight: 500; }
+
+  .desktop-frame{ width: 100%; border: 1px solid var(--border-soft); border-radius: var(--radius-panel); overflow:hidden; background: #0e1013; }
+  .desktop-titlebar{ display:flex; align-items:center; gap:8px; padding: 10px 14px; background: #0a0c0e; border-bottom: 1px solid var(--border-soft); }
+  .desktop-dot{ width:9px; height:9px; border-radius:50%; background: #2a3036; }
+  .desktop-body{ display:flex; height: 460px; }
+  .desktop-sidebar{ width: 220px; background: var(--panel-inset); border-right: 1px solid var(--border-soft); padding: 20px 16px; }
+  .desktop-main{ flex:1; padding: 24px 28px; overflow:hidden; }
+  .sidebar-item{ font-size: 12.5px; padding: 9px 10px; border-radius: 3px; color: var(--text-muted); margin-bottom:2px; }
+  .sidebar-item.active{ background: var(--panel-raised); color: var(--text-primary); border-left: 2px solid var(--amber); }
+
+  .grid-2col{ display:grid; grid-template-columns: 1.3fr 1fr; gap: 22px; }
+
+  footer{ padding: 60px 40px 0; text-align:center; }
+  .footer-note{ font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Design System · v0.1</div>
+    <h1 class="title">Device Pulse</h1>
+    <p class="sub">A visual language for reading the health of a live telemetry connection at a glance — built for a multiplatform sensor dashboard running on Android, iOS, and Desktop.</p>
+    <div class="hero-trace">
+      <svg width="320" height="90" viewBox="0 0 320 90" fill="none">
+        <polyline points="0,45 20,45 30,20 40,60 50,15 60,70 70,30 80,45 100,45 110,45 120,50 130,40 140,45 160,45 180,45 190,25 200,65 210,45 230,45 250,45 260,35 270,55 280,45 320,45"
+          stroke="#45d6c4" stroke-width="1.5" fill="none" opacity="0.8"/>
+        <circle cx="320" cy="45" r="3" fill="#45d6c4"/>
+      </svg>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head"><span class="section-num">01</span><span class="section-title">Color</span></div>
+    <p class="section-desc">A graphite instrument panel rather than pure black — warm enough to hold long monitoring sessions. Two signal accents carry meaning, never decoration: amber for anything live or attention-worthy, cyan for stable and nominal.</p>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-fill" style="background:#15181c"></div><div class="swatch-meta"><div class="swatch-name">Graphite / bg</div><div class="swatch-hex">#15181C</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#1d2126"></div><div class="swatch-meta"><div class="swatch-name">Panel</div><div class="swatch-hex">#1D2126</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#242a30"></div><div class="swatch-meta"><div class="swatch-name">Panel raised</div><div class="swatch-hex">#242A30</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#ffb238"></div><div class="swatch-meta"><div class="swatch-name">Signal amber</div><div class="swatch-hex">#FFB238</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#45d6c4"></div><div class="swatch-meta"><div class="swatch-name">Signal cyan</div><div class="swatch-hex">#45D6C4</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#ff5c5c"></div><div class="swatch-meta"><div class="swatch-name">Fault red</div><div class="swatch-hex">#FF5C5C</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#e9edf0"></div><div class="swatch-meta"><div class="swatch-name">Text primary</div><div class="swatch-hex">#E9EDF0</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#8a939c"></div><div class="swatch-meta"><div class="swatch-name">Text muted</div><div class="swatch-hex">#8A939C</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#5b646c"></div><div class="swatch-meta"><div class="swatch-name">Text dim</div><div class="swatch-hex">#5B646C</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#333b42"></div><div class="swatch-meta"><div class="swatch-name">Border</div><div class="swatch-hex">#333B42</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#191d21"></div><div class="swatch-meta"><div class="swatch-name">Inset field</div><div class="swatch-hex">#191D21</div></div></div>
+      <div class="swatch"><div class="swatch-fill" style="background:#0e1013"></div><div class="swatch-meta"><div class="swatch-name">Device chrome</div><div class="swatch-hex">#0E1013</div></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">02</span><span class="section-title">Type</span></div>
+    <p class="section-desc">A complete scale, not a sampler — every text role the app actually uses gets a name, and nothing gets sized ad hoc on a screen-by-screen basis. Space Grotesk carries titles and UI chrome; IBM Plex Sans carries prose; IBM Plex Mono is reserved strictly for anything that is measured data — readings, timestamps, topic strings, log entries — so numbers read as instrumentation, not styled copy.</p>
+
+    <div class="type-row"><div class="type-sample" style="font-size:44px; font-weight:600;">Sensor Panel</div><div class="type-meta"><span>Display / 44 · 600 · lh 1.1</span><span>Space Grotesk</span><span>Screen headers (Dashboard, Cold storage)</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-size:24px; font-weight:500;">Reconnection policy</div><div class="type-meta"><span>Title / 24 · 500 · lh 1.2</span><span>Space Grotesk</span><span>Section & card titles</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-size:17px; font-weight:600;">No devices yet</div><div class="type-meta"><span>Subtitle / 17 · 600 · lh 1.3</span><span>Space Grotesk</span><span>Empty states, dialog titles</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-family:var(--font-body); font-size:16px; font-weight:400; color:var(--text-primary); max-width:480px;">Backoff resets only after a message is received, not merely on socket connect.</div><div class="type-meta"><span>Body / 16 · 400 · lh 1.6</span><span>IBM Plex Sans</span><span>Paragraph copy, empty-state body</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-family:var(--font-body); font-size:13.5px; font-weight:500; color:var(--text-primary);">Ward B — bed 4</div><div class="type-meta"><span>Body Small / 13.5 · 500 · lh 1.4</span><span>IBM Plex Sans</span><span>Device names, list row titles</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-family:var(--font-body); font-size:12.5px; font-weight:400; color:var(--text-muted); max-width:420px;">Gap in trace = no data received, not zero reading.</div><div class="type-meta"><span>Caption / 12.5 · 400 · lh 1.5</span><span>IBM Plex Sans</span><span>Hints, log descriptions</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-family:var(--font-mono); font-size:11px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-dim);">Last known</div><div class="type-meta"><span>Overline / 11 · 500 · lh 1 · +0.08em</span><span>IBM Plex Mono</span><span>Field labels, section numbers, sidebar items</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-family:var(--font-mono); font-size:34px; font-weight:500; color:var(--cyan);">24.6<span style="font-size:15px; color:var(--text-dim);">°C</span></div><div class="type-meta"><span>Data Large / 34 · 500 · lh 1</span><span>IBM Plex Mono</span><span>Primary readout — one per detail screen</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-family:var(--font-mono); font-size:20px; font-weight:500; color:var(--text-primary);">24.6°C&nbsp;&nbsp;&nbsp;1013.2 hPa</div><div class="type-meta"><span>Data Medium / 20 · 500 · lh 1.1</span><span>IBM Plex Mono</span><span>Desktop secondary readout, toolbar values</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-family:var(--font-mono); font-size:15px; font-weight:400; color:var(--text-primary);">19.4°C</div><div class="type-meta"><span>Data Small / 15 · 400 · lh 1.2</span><span>IBM Plex Mono</span><span>Device row values in lists</span></div></div>
+
+    <div class="type-row"><div class="type-sample" style="font-family:var(--font-mono); font-size:11px; font-weight:400; color:var(--text-dim);">devicepulse/8f2c1a/sensors/temp</div><div class="type-meta"><span>Mono Micro / 11 · 400 · lh 1.4</span><span>IBM Plex Mono</span><span>Topic strings, timestamps, status bar</span></div></div>
+
+    <div class="type-row" style="border-bottom:1px solid var(--border-soft); padding-bottom:22px;"><div class="type-sample" style="font-family:var(--font-mono); font-size:12.5px; font-weight:600; letter-spacing:0.04em;">CONNECT BROKER</div><div class="type-meta"><span>Button Label / 12.5 · 600 · +0.04em</span><span>IBM Plex Mono</span><span>All button and chip labels</span></div></div>
+
+    <div class="mono-block">
+      <span class="dim">topic</span>  devicepulse/8f2c1a/sensors/temp<br>
+      <span class="dim">qos</span>    1&nbsp;&nbsp;&nbsp;<span class="dim">retain</span> false<br>
+      <span class="dim">14:22:07</span>  reconnect attempt 3 · backoff 4.2s
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">03</span><span class="section-title">Components</span></div>
+    <p class="section-desc">Connection state is never a color alone — a dot plus a word plus, where it matters, a trace. This is the one rule the whole system is built around.</p>
+    <div class="comp-grid">
+
+      <div class="comp-card">
+        <div class="comp-label">Connection chips</div>
+        <div class="chip connected"><span class="chip-dot"></span>Connected</div>
+        <div class="chip connecting"><span class="chip-dot"></span>Connecting</div>
+        <div class="chip reconnecting"><span class="chip-dot"></span>Reconnecting · 4.2s</div>
+        <div class="chip disconnected"><span class="chip-dot"></span>Disconnected</div>
+        <div class="chip error"><span class="chip-dot"></span>Broker rejected</div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-label">Signal trace</div>
+        <div class="signal-trace"><svg width="120" height="28" viewBox="0 0 120 28"><polyline points="0,14 10,14 14,6 18,20 22,10 26,18 30,14 40,14 50,14 54,16 58,12 62,14 72,14 82,14 86,8 90,20 94,14 104,14 120,14" stroke="#45d6c4" stroke-width="1.5" fill="none"/><circle cx="120" cy="14" r="2.5" fill="#45d6c4"/></svg><span class="trace-label">stable · 40ms avg</span></div>
+        <div class="signal-trace"><svg width="120" height="28" viewBox="0 0 120 28"><polyline points="0,14 10,4 18,24 26,2 34,26 42,8 50,20 58,4 66,22 74,10 82,18 90,6 98,20 106,10 120,16" stroke="#ffb238" stroke-width="1.5" fill="none"/><circle cx="120" cy="16" r="2.5" fill="#ffb238"/></svg><span class="trace-label">jittery · 210ms avg</span></div>
+        <div class="signal-trace"><svg width="120" height="28" viewBox="0 0 120 28"><polyline points="0,14 30,14 30,26 60,26 60,14 120,14" stroke="#5b646c" stroke-width="1.5" fill="none" stroke-dasharray="2 3"/></svg><span class="trace-label">no data</span></div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-label">Buttons</div>
+        <button class="btn btn-primary">Connect broker</button>
+        <button class="btn btn-secondary">Edit topic filter</button>
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-danger">Forget device</button>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-label">Sensor readout</div>
+        <div class="readout"><div class="label-row"><div class="label">Temperature</div><div class="chip connected"><span class="chip-dot"></span>Live</div></div><div class="value">24.6<span class="unit">°C</span></div></div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-label">Input field</div>
+        <div class="field"><label>Broker URL</label><input type="text" value="wss://broker.hivemq.com:8884"><div class="hint">Public broker — topics are namespaced per device automatically.</div></div>
+      </div>
+
+      <div class="comp-card">
+        <div class="comp-label">Event log</div>
+        <div class="log-entry"><span class="log-time">14:22:07</span><span class="log-text"><b>Reconnecting</b> · attempt 3, backoff 4.2s</span></div>
+        <div class="log-entry"><span class="log-time">14:21:58</span><span class="log-text"><b>Connection lost</b> · network unreachable</span></div>
+        <div class="log-entry"><span class="log-time">14:18:03</span><span class="log-text"><b>Connected</b> · 112ms handshake</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">04</span><span class="section-title">Screens — Mobile</span></div>
+    <p class="section-desc">Three states of the same dashboard: nominal, mid-incident, and the empty state before any device has been discovered.</p>
+    <div class="screens-row">
+
+      <div class="phone-col">
+        <div class="phone"><div class="phone-screen">
+          <div class="statusbar"><span>9:41</span><span>DEVICE PULSE</span><span>●●●</span></div>
+          <div class="screen-pad">
+            <div class="screen-title">Sensors</div>
+            <div class="screen-sub">devicepulse/8f2c1a · broker: hivemq public</div>
+            <div class="toolbar-status">
+              <div class="chip connected"><span class="chip-dot"></span>Broker connected</div>
+              <svg width="70" height="20" viewBox="0 0 70 20"><polyline points="0,10 8,10 12,4 16,15 20,6 24,13 28,10 40,10 48,10 52,12 56,8 60,10 70,10" stroke="#45d6c4" stroke-width="1.3" fill="none"/></svg>
+            </div>
+            <div class="search-bar">⌕ filter by topic or name</div>
+            <div class="device-row"><div><div class="device-name">Ward B — bed 4</div><div class="device-topic">sensors/temp</div></div><div class="device-val"><div class="v">24.6<span class="u">°C</span></div><div class="chip connected" style="margin-top:4px;"><span class="chip-dot"></span>live</div></div></div>
+            <div class="device-row"><div><div class="device-name">Ward B — bed 4</div><div class="device-topic">sensors/pressure</div></div><div class="device-val"><div class="v">1013<span class="u">hPa</span></div><div class="chip connected" style="margin-top:4px;"><span class="chip-dot"></span>live</div></div></div>
+            <div class="device-row"><div><div class="device-name">Cold storage — R2</div><div class="device-topic">sensors/temp</div></div><div class="device-val"><div class="v">−18.2<span class="u">°C</span></div><div class="chip reconnecting" style="margin-top:4px;"><span class="chip-dot"></span>4.2s</div></div></div>
+            <div class="device-row"><div><div class="device-name">Loading dock</div><div class="device-topic">sensors/humidity</div></div><div class="device-val"><div class="v">61<span class="u">%RH</span></div><div class="chip connected" style="margin-top:4px;"><span class="chip-dot"></span>live</div></div></div>
+            <div class="device-row"><div><div class="device-name">Loading dock</div><div class="device-topic">sensors/temp</div></div><div class="device-val"><div class="v">19.4<span class="u">°C</span></div><div class="chip connected" style="margin-top:4px;"><span class="chip-dot"></span>live</div></div></div>
+          </div>
+        </div></div>
+        <div class="phone-caption">Dashboard — nominal</div>
+      </div>
+
+      <div class="phone-col">
+        <div class="phone"><div class="phone-screen">
+          <div class="statusbar"><span>9:41</span><span>DEVICE PULSE</span><span>●●●</span></div>
+          <div class="screen-pad">
+            <div class="screen-title">Cold storage — R2</div>
+            <div class="screen-sub">devicepulse/8f2c1a/sensors/temp</div>
+            <div class="panel bracket" style="margin-top:16px;"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span>
+              <div class="readout"><div class="label-row"><div class="label">Last known</div><div class="chip reconnecting"><span class="chip-dot"></span>Reconnecting</div></div><div class="value" style="color:var(--text-dim);">−18.2<span class="unit">°C</span></div></div>
+              <div style="margin-top:14px;"><svg width="100%" height="60" viewBox="0 0 260 60" preserveAspectRatio="none"><polyline points="0,20 30,18 60,22 90,19 118,21 118,55 150,55 150,21 190,20 220,22 260,19" stroke="#ffb238" stroke-width="1.5" fill="none"/></svg></div>
+              <div class="hint" style="margin-top:8px;">Gap in trace = no data received, not zero reading.</div>
+            </div>
+            <div class="screen-title" style="font-size:15px; margin-top:22px;">Connection log</div>
+            <div class="log-entry"><span class="log-time">14:22:07</span><span class="log-text"><b>Reconnecting</b> · attempt 3, backoff 4.2s</span></div>
+            <div class="log-entry"><span class="log-time">14:21:58</span><span class="log-text"><b>Connection lost</b> · network unreachable</span></div>
+            <div class="log-entry"><span class="log-time">14:19:41</span><span class="log-text"><b>Connected</b> · 96ms handshake</span></div>
+            <div class="log-entry"><span class="log-time">14:19:40</span><span class="log-text"><b>Reconnecting</b> · attempt 1, backoff 1.0s</span></div>
+            <button class="btn btn-secondary" style="width:100%; justify-content:center; margin-top:18px;">View raw payloads</button>
+          </div>
+        </div></div>
+        <div class="phone-caption">Device detail — mid-incident</div>
+      </div>
+
+      <div class="phone-col">
+        <div class="phone"><div class="phone-screen">
+          <div class="statusbar"><span>9:41</span><span>DEVICE PULSE</span><span>●●●</span></div>
+          <div class="empty-state">
+            <div class="empty-glyph"><svg width="64" height="64" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" stroke="#333b42" stroke-width="1.2" stroke-dasharray="3 4"/><polyline points="18,36 26,36 30,24 34,44 38,30 42,36 46,36" stroke="#5b646c" stroke-width="1.4" fill="none"/></svg></div>
+            <div class="empty-title">No devices yet</div>
+            <div class="empty-body">Nothing has published to <b>devicepulse/8f2c1a/#</b> since this app started listening. Check the broker connection or publish a test reading.</div>
+            <button class="btn btn-primary" style="margin-top:24px;">Check broker settings</button>
+          </div>
+        </div></div>
+        <div class="phone-caption">Empty state — before first message</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">05</span><span class="section-title">Screens — Desktop</span></div>
+    <p class="section-desc">Same domain model, same components — the desktop layout adds a sidebar and a persistent detail pane instead of full-screen navigation. No new visual vocabulary.</p>
+    <div class="desktop-frame">
+      <div class="desktop-titlebar"><div class="desktop-dot"></div><div class="desktop-dot"></div><div class="desktop-dot"></div><span style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin-left:8px;">Device Pulse — Desktop</span></div>
+      <div class="desktop-body">
+        <div class="desktop-sidebar">
+          <div class="sidebar-item active">All sensors</div>
+          <div class="sidebar-item">Ward B</div>
+          <div class="sidebar-item">Cold storage</div>
+          <div class="sidebar-item">Loading dock</div>
+          <div class="sidebar-item" style="margin-top:20px; color:var(--text-dim);">Broker settings</div>
+          <div class="sidebar-item" style="color:var(--text-dim);">Connection log</div>
+        </div>
+        <div class="desktop-main">
+          <div class="grid-2col">
+            <div>
+              <div class="toolbar-status">
+                <div class="chip connected"><span class="chip-dot"></span>Broker connected · hivemq public</div>
+                <svg width="90" height="20" viewBox="0 0 90 20"><polyline points="0,10 10,10 15,4 20,15 25,6 30,13 35,10 50,10 60,10 65,12 70,8 75,10 90,10" stroke="#45d6c4" stroke-width="1.3" fill="none"/></svg>
+              </div>
+              <div class="device-row"><div><div class="device-name">Ward B — bed 4</div><div class="device-topic">sensors/temp</div></div><div class="device-val"><div class="v">24.6<span class="u">°C</span></div></div></div>
+              <div class="device-row"><div><div class="device-name">Cold storage — R2</div><div class="device-topic">sensors/temp</div></div><div class="device-val"><div class="v">−18.2<span class="u">°C</span></div><div class="chip reconnecting" style="margin-top:4px;"><span class="chip-dot"></span>4.2s</div></div></div>
+              <div class="device-row"><div><div class="device-name">Loading dock</div><div class="device-topic">sensors/humidity</div></div><div class="device-val"><div class="v">61<span class="u">%RH</span></div></div></div>
+              <div class="device-row"><div><div class="device-name">Loading dock</div><div class="device-topic">sensors/temp</div></div><div class="device-val"><div class="v">19.4<span class="u">°C</span></div></div></div>
+            </div>
+            <div class="panel bracket"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span>
+              <div class="comp-label" style="margin-bottom:12px;">Cold storage — R2 detail</div>
+              <div class="readout"><div class="label-row"><div class="label">Last known</div></div><div class="value" style="font-size:26px;">−18.2<span class="unit">°C</span></div></div>
+              <div style="margin-top:14px;"><svg width="100%" height="50" viewBox="0 0 240 50" preserveAspectRatio="none"><polyline points="0,16 30,14 60,18 90,15 108,17 108,45 140,45 140,17 180,16 210,18 240,15" stroke="#ffb238" stroke-width="1.4" fill="none"/></svg></div>
+              <div class="log-entry" style="margin-top:10px;"><span class="log-time">14:22:07</span><span class="log-text"><b>Reconnecting</b> · attempt 3</span></div>
+              <div class="log-entry"><span class="log-time">14:21:58</span><span class="log-text"><b>Lost</b> · network unreachable</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-bottom:none;">
+    <div class="section-head"><span class="section-num">06</span><span class="section-title">The signature element</span></div>
+    <p class="section-desc" style="max-width:720px;">The signal trace is the one motif repeated everywhere a connection appears — dashboard header, per-device row, detail view, desktop panel. It's not decorative: a flat, tight line means stable; a jagged one means the connection is alive but unhealthy; a dashed flat line means no data at all. A user should be able to tell those three apart without reading a single word, the same way you'd read an oscilloscope.</p>
+  </section>
+
+</div>
+
+<footer><div class="footer-note">DEVICE PULSE — DESIGN SYSTEM · TOKENS DERIVED FROM COMPOSE THEME (Color.kt / Type.kt) · FOR ANDROID · IOS · DESKTOP</div></footer>
+
+</body>
+</html>
