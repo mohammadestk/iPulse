@@ -7,7 +7,7 @@ class ConnectToBrokerUseCase(
 ) {
     companion object {
         const val DEFAULT_BROKER = "test.mosquitto.org"
-        const val DEFAULT_PORT = 8080
+        const val DEFAULT_PORT = 8081
     }
 
     suspend operator fun invoke(

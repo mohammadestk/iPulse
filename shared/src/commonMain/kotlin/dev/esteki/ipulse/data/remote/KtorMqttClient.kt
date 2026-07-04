@@ -1,11 +1,28 @@
 package dev.esteki.ipulse.data.remote
 
 import dev.esteki.ipulse.data.model.MqttMessage
-import io.ktor.client.*
-import io.ktor.client.plugins.websocket.*
-import io.ktor.websocket.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.utils.io.core.toByteArray
+import io.ktor.websocket.Frame
+import io.ktor.websocket.WebSocketSession
+import io.ktor.websocket.close
+import io.ktor.websocket.readBytes
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
 
 class KtorMqttClient(
@@ -59,7 +76,8 @@ class KtorMqttClient(
         subscribedTopics.clear()
         try {
             sendMqttDisconnect()
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
         webSocketSession?.close()
         webSocketSession = null
         _connectionState.value = MqttConnectionState.DISCONNECTED
@@ -92,7 +110,8 @@ class KtorMqttClient(
 
         val payload = byteArrayOf(0x00, clientBytes.size.toByte()) + clientBytes
         val remainingLength = variableHeader.size + payload.size
-        val packet = byteArrayOf(0x10.toByte()) + encodeRemainingLength(remainingLength) + variableHeader + payload
+        val packet =
+            byteArrayOf(0x10.toByte()) + encodeRemainingLength(remainingLength) + variableHeader + payload
 
         webSocketSession?.send(Frame.Binary(true, packet))
     }
@@ -141,7 +160,8 @@ class KtorMqttClient(
         scope.launch {
             try {
                 webSocketSession?.send(Frame.Binary(true, byteArrayOf(0xC0.toByte(), 0x00)))
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -173,7 +193,8 @@ class KtorMqttClient(
 
     private fun handlePublish(data: ByteArray) {
         var offset = 1
-        val topicLength = (data[offset].toInt() and 0xFF) shl 8 or (data[offset + 1].toInt() and 0xFF)
+        val topicLength =
+            (data[offset].toInt() and 0xFF) shl 8 or (data[offset + 1].toInt() and 0xFF)
         offset += 2
         val topic = data.decodeToString(offset, offset + topicLength)
         offset += topicLength

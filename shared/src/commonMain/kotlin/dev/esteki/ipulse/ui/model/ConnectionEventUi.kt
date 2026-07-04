@@ -24,8 +24,10 @@ fun ConnectionEvent.toConnectionEventUi(): ConnectionEventUi = ConnectionEventUi
 
 private fun formatTimestamp(instant: Instant): String {
     val epochSeconds = instant.epochSeconds
-    val hours = (epochSeconds % 86400) / 3600
-    val minutes = (epochSeconds % 3600) / 60
-    val seconds = epochSeconds % 60
-    return "%02d:%02d:%02d".format(hours, minutes, seconds)
+    val hours = ((epochSeconds % 86400) / 3600).toInt()
+    val minutes = ((epochSeconds % 3600) / 60).toInt()
+    val seconds = (epochSeconds % 60).toInt()
+    return "${hours.pad()}:${minutes.pad()}:${seconds.pad()}"
 }
+
+private fun Int.pad(): String = if (this < 10) "0$this" else "$this"

@@ -28,5 +28,15 @@ fun Device.toDeviceUi(): DeviceUi = DeviceUi(
 )
 
 private fun Double.format(decimals: Int): String {
-    return "%.${decimals}f".format(this)
+    val factor = listOf(1.0, 10.0, 100.0, 1000.0)[decimals.coerceIn(0, 3)]
+    val rounded = kotlin.math.round(this * factor) / factor
+    val str = rounded.toString()
+    val dotIndex = str.indexOf('.')
+    return if (dotIndex < 0) {
+        str
+    } else {
+        val intPart = str.substring(0, dotIndex)
+        val decPart = str.substring(dotIndex + 1).take(decimals).padEnd(decimals, '0')
+        "$intPart.$decPart"
+    }
 }
