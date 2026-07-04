@@ -146,10 +146,11 @@ class KtorMqttClient(
     }
 
     private fun startReceiving() {
+        val session = webSocketSession ?: return
         receiveJob = scope.launch {
             try {
                 while (isActive) {
-                    val frame = webSocketSession?.receive() as? Frame.Binary ?: break
+                    val frame = session.incoming.receive() as? Frame.Binary ?: break
                     handleMqttPacket(frame.readBytes())
                 }
             } catch (_: Exception) {
@@ -226,8 +227,9 @@ class KtorMqttClient(
     }
 
     private suspend fun receiveMqttPacket(): ByteArray? {
+        val session = webSocketSession ?: return null
         return withTimeoutOrNull(5.seconds) {
-            (webSocketSession?.receive() as? Frame.Binary)?.readBytes()
+            (session.incoming.receive() as? Frame.Binary)?.readBytes()
         }
     }
 

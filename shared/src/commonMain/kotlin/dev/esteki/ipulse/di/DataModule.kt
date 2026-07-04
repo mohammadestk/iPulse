@@ -7,6 +7,8 @@ import dev.esteki.ipulse.data.repository.TelemetryRepositoryImpl
 import dev.esteki.ipulse.domain.repository.MqttRepository
 import dev.esteki.ipulse.domain.repository.TelemetryRepository
 import dev.esteki.ipulse.domain.usecase.*
+import dev.esteki.ipulse.ui.viewmodel.DashboardViewModel
+import dev.esteki.ipulse.ui.viewmodel.DeviceDetailViewModel
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.serialization.kotlinx.json.*
@@ -51,4 +53,22 @@ val dataModule = module {
     factory { ObserveConnectionEventsUseCase(mqttRepository = get()) }
     factory { ObserveSignalQualityUseCase(telemetryRepository = get()) }
     factory { GetDeviceByIdUseCase(telemetryRepository = get()) }
+
+    factory { DashboardViewModel(
+        connectToBroker = get(),
+        disconnectFromBroker = get(),
+        observeTelemetryUseCase = get(),
+        observeConnectionStateUseCase = get(),
+        observeConnectionEventsUseCase = get(),
+        observeSignalQualityUseCase = get()
+    ) }
+
+    factory { params ->
+        DeviceDetailViewModel(
+            deviceId = params.get(),
+            getDeviceById = get(),
+            observeConnectionEventsUseCase = get(),
+            observeSignalQualityUseCase = get()
+        )
+    }
 }
