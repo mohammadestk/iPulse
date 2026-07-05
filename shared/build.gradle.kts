@@ -50,13 +50,6 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
-            implementation(libs.ktor.client.okhttp)
-        }
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-        }
-        jvmMain.dependencies {
-            implementation(libs.ktor.client.cio)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -69,11 +62,8 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.websockets)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.kotlinx.json)
-            implementation(libs.ktor.client.logging)
+            implementation(libs.kmqtt.common)
+            implementation(libs.kmqtt.client)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }

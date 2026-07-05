@@ -1,6 +1,6 @@
 package dev.esteki.ipulse.di
 
-import dev.esteki.ipulse.data.remote.KtorMqttClient
+import dev.esteki.ipulse.data.remote.KmqttClient
 import dev.esteki.ipulse.data.remote.MqttClient
 import dev.esteki.ipulse.data.repository.MqttRepositoryImpl
 import dev.esteki.ipulse.data.repository.TelemetryRepositoryImpl
@@ -16,14 +16,6 @@ import dev.esteki.ipulse.domain.usecase.ObserveTelemetryUseCase
 import dev.esteki.ipulse.domain.usecase.SubscribeToDeviceTopicUseCase
 import dev.esteki.ipulse.ui.viewmodel.DashboardViewModel
 import dev.esteki.ipulse.ui.viewmodel.DeviceDetailViewModel
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.DEFAULT
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
@@ -35,21 +27,8 @@ val dataModule = module {
         }
     }
 
-    single<HttpClient> {
-        HttpClient {
-            install(WebSockets)
-            install(Logging) {
-                logger = Logger.DEFAULT
-                level = LogLevel.ALL
-            }
-            install(ContentNegotiation) {
-                json(get())
-            }
-        }
-    }
-
     single<MqttClient> {
-        KtorMqttClient(httpClient = get())
+        KmqttClient()
     }
 
     single<MqttRepository> {
