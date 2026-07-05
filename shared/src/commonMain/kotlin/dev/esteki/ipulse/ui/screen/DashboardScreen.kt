@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.DeviceConnectionState
 import dev.esteki.ipulse.ui.model.ConnectionStateUi
 import dev.esteki.ipulse.ui.model.DeviceUi
@@ -64,7 +63,7 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "broker: test.mosquitto.org",
+            text = "broker: broker.emqx.io",
             style = MonoMicroStyle,
             color = TextDim
         )
@@ -74,9 +73,7 @@ fun DashboardScreen(
         // Connection status bar
         ConnectionStatusBar(
             connectionState = state.connectionState,
-            signalQuality = state.signalQuality,
-            onConnectClick = { onAction(DashboardAction.OnConnectClick) },
-            onDisconnectClick = { onAction(DashboardAction.OnDisconnectClick) }
+            signalQuality = state.signalQuality
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -128,9 +125,7 @@ fun DashboardScreen(
 @Composable
 private fun ConnectionStatusBar(
     connectionState: ConnectionStateUi,
-    signalQuality: SignalQualityUi?,
-    onConnectClick: () -> Unit,
-    onDisconnectClick: () -> Unit
+    signalQuality: SignalQualityUi?
 ) {
     Row(
         modifier = Modifier
@@ -145,22 +140,12 @@ private fun ConnectionStatusBar(
             label = connectionState.displayName
         )
 
-        if (connectionState.isConnected) {
-            TextButton(onClick = onDisconnectClick) {
-                Text(
-                    text = "Disconnect",
-                    style = ButtonLabelStyle,
-                    color = TextMuted
-                )
-            }
-        } else {
-            TextButton(onClick = onConnectClick) {
-                Text(
-                    text = if (connectionState.state == ConnectionState.CONNECTING) "Connecting..." else "Connect",
-                    style = ButtonLabelStyle,
-                    color = SignalAmber
-                )
-            }
+        signalQuality?.let { quality ->
+            Text(
+                text = quality.displayLabel,
+                style = MonoMicroStyle,
+                color = TextDim
+            )
         }
     }
 }

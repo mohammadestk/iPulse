@@ -27,8 +27,6 @@ data class DashboardState(
 }
 
 sealed interface DashboardAction {
-    data object OnConnectClick : DashboardAction
-    data object OnDisconnectClick : DashboardAction
     data class OnSearchQueryChange(val query: String) : DashboardAction
     data class OnDeviceClick(val deviceId: String) : DashboardAction
 }

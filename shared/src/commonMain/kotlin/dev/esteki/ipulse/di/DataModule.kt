@@ -72,7 +72,6 @@ val dataModule = module {
     factory {
         DashboardViewModel(
             connectToBroker = get(),
-            disconnectFromBroker = get(),
             subscribeToDeviceTopic = get(),
             observeTelemetryUseCase = get(),
             observeConnectionStateUseCase = get(),

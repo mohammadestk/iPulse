@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 
 class DashboardViewModel(
     private val connectToBroker: ConnectToBrokerUseCase,
-    private val disconnectFromBroker: DisconnectFromBrokerUseCase,
     private val subscribeToDeviceTopic: SubscribeToDeviceTopicUseCase,
     private val observeTelemetryUseCase: ObserveTelemetryUseCase,
     private val observeConnectionStateUseCase: ObserveConnectionStateUseCase,
@@ -35,12 +34,22 @@ class DashboardViewModel(
         observeTelemetryDevices()
         observeConnectionEvents()
         observeSignalQuality()
+        autoConnect()
+    }
+
+    private fun autoConnect() {
+        viewModelScope.launch {
+            try {
+                connectToBroker()
+                subscribeToDeviceTopic("#")
+            } catch (_: Exception) {
+                // Connection state will be updated via observeConnectionState
+            }
+        }
     }
 
     fun onAction(action: DashboardAction) {
         when (action) {
-            is DashboardAction.OnConnectClick -> connect()
-            is DashboardAction.OnDisconnectClick -> disconnect()
             is DashboardAction.OnSearchQueryChange -> {
                 _state.update { it.copy(searchQuery = action.query) }
             }
@@ -48,30 +57,6 @@ class DashboardViewModel(
                 viewModelScope.launch {
                     _events.send(DashboardEvent.NavigateToDeviceDetail(action.deviceId))
                 }
-            }
-        }
-    }
-
-    private fun connect() {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            try {
-                connectToBroker()
-                subscribeToDeviceTopic("#")
-                _state.update { it.copy(isLoading = false) }
-            } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false) }
-                _events.send(DashboardEvent.ShowError(e.message ?: "Connection failed"))
-            }
-        }
-    }
-
-    private fun disconnect() {
-        viewModelScope.launch {
-            try {
-                disconnectFromBroker()
-            } catch (e: Exception) {
-                _events.send(DashboardEvent.ShowError(e.message ?: "Disconnection failed"))
             }
         }
     }
