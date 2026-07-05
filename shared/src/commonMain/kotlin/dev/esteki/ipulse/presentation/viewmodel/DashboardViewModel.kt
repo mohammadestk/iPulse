@@ -15,12 +15,12 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class DashboardViewModel(
-    private val connectToBroker: ConnectToBrokerUseCase,
-    private val subscribeToDeviceTopic: SubscribeToDeviceTopicUseCase,
-    private val observeTelemetryUseCase: ObserveTelemetryUseCase,
-    private val observeConnectionStateUseCase: ObserveConnectionStateUseCase,
-    private val observeConnectionEventsUseCase: ObserveConnectionEventsUseCase,
-    private val observeSignalQualityUseCase: ObserveSignalQualityUseCase
+    private val connectToBroker: ConnectToBroker,
+    private val subscribeToDeviceTopic: SubscribeToDeviceTopic,
+    private val observeTelemetry: ObserveTelemetry,
+    private val observeConnectionState: ObserveConnectionState,
+    private val observeConnectionEvents: ObserveConnectionEvents,
+    private val observeSignalQuality: ObserveSignalQuality
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DashboardState())
@@ -30,20 +30,20 @@ class DashboardViewModel(
     val events = _events.receiveAsFlow()
 
     init {
-        observeConnectionState()
-        observeTelemetryDevices()
-        observeConnectionEvents()
-        observeSignalQuality()
+        collectConnectionState()
+        collectTelemetryDevices()
+        collectConnectionEvents()
+        collectSignalQuality()
         autoConnect()
     }
 
     private fun autoConnect() {
         viewModelScope.launch {
             try {
-                connectToBroker()
+                connectToBroker("test.mosquitto.org", 8081)
                 subscribeToDeviceTopic("#")
             } catch (_: Exception) {
-                // Connection state will be updated via observeConnectionState
+                // Connection state will be updated via collectConnectionState
             }
         }
     }
@@ -61,25 +61,25 @@ class DashboardViewModel(
         }
     }
 
-    private fun observeConnectionState() {
+    private fun collectConnectionState() {
         viewModelScope.launch {
-            observeConnectionStateUseCase().collect { connectionState ->
+            observeConnectionState().collect { connectionState ->
                 _state.update { it.copy(connectionState = connectionState.toConnectionStateUi()) }
             }
         }
     }
 
-    private fun observeTelemetryDevices() {
+    private fun collectTelemetryDevices() {
         viewModelScope.launch {
-            observeTelemetryUseCase().collect { devices ->
+            observeTelemetry().collect { devices ->
                 _state.update { it.copy(devices = devices.map { device -> device.toDeviceUi() }) }
             }
         }
     }
 
-    private fun observeConnectionEvents() {
+    private fun collectConnectionEvents() {
         viewModelScope.launch {
-            observeConnectionEventsUseCase().collect { event ->
+            observeConnectionEvents().collect { event ->
                 _state.update { state ->
                     val events = (listOf(event.toConnectionEventUi()) + state.connectionEvents).take(50)
                     state.copy(connectionEvents = events)
@@ -88,9 +88,9 @@ class DashboardViewModel(
         }
     }
 
-    private fun observeSignalQuality() {
+    private fun collectSignalQuality() {
         viewModelScope.launch {
-            observeSignalQualityUseCase().collect { quality ->
+            observeSignalQuality().collect { quality ->
                 _state.update { it.copy(signalQuality = quality.toSignalQualityUi()) }
             }
         }

@@ -15,7 +15,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.esteki.ipulse.domain.model.ConnectionState
-import dev.esteki.ipulse.domain.model.DeviceConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionStateUi
 import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
@@ -230,7 +229,7 @@ private fun DeviceRow(
             }
             Spacer(modifier = Modifier.height(4.dp))
             ConnectionChip(
-                state = if (device.connectionState == DeviceConnectionState.CONNECTED)
+                state = if (device.connectionState == ConnectionState.CONNECTED)
                     ConnectionState.CONNECTED
                 else ConnectionState.DISCONNECTED,
                 label = if (device.isLive) "live" else "offline"

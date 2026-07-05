@@ -3,7 +3,8 @@ package dev.esteki.ipulse.data.repository
 import dev.esteki.ipulse.data.model.TelemetryPayload
 import dev.esteki.ipulse.data.remote.MqttClientAdapter
 import dev.esteki.ipulse.domain.model.*
-import dev.esteki.ipulse.domain.repository.TelemetryRepository
+import dev.esteki.ipulse.domain.repository.BrokerMessage
+import dev.esteki.ipulse.domain.repository.DeviceRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,10 +18,10 @@ import kotlinx.serialization.json.Json
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class TelemetryRepositoryImpl(
+class DeviceRepositoryImpl(
     private val mqttClient: MqttClientAdapter,
     private val json: Json = Json { ignoreUnknownKeys = true }
-) : TelemetryRepository {
+) : DeviceRepository {
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val _devices = MutableStateFlow<Map<String, Device>>(emptyMap())
@@ -45,7 +46,7 @@ class TelemetryRepositoryImpl(
         }
     }
 
-    override suspend fun processMessage(topic: String, payload: String, timestamp: Long) {
+    private fun processMessage(topic: String, payload: String, timestamp: Long) {
         val sensorType = SensorType.fromTopic(topic) ?: return
         val deviceId = extractDeviceId(topic)
         val instant = Instant.fromEpochMilliseconds(timestamp)
@@ -68,7 +69,7 @@ class TelemetryRepositoryImpl(
             )
             current + (deviceId to device.copy(
                 latestReading = reading,
-                connectionState = DeviceConnectionState.CONNECTED
+                connectionState = ConnectionState.CONNECTED
             ))
         }
 
@@ -81,13 +82,6 @@ class TelemetryRepositoryImpl(
 
     override suspend fun getReadingsForDevice(deviceId: String): List<TelemetryReading> {
         return readings[deviceId]?.toList() ?: emptyList()
-    }
-
-    override suspend fun clearOldReadings(maxAgeMs: Long) {
-        val cutoff = Clock.System.now().toEpochMilliseconds() - maxAgeMs
-        readings.values.forEach { list ->
-            list.removeAll { it.timestamp.toEpochMilliseconds() < cutoff }
-        }
     }
 
     private fun parsePayload(payload: String): Double {

@@ -99,6 +99,30 @@ wasmJsMain/     → Wasm web target
 - Android compileSdk: `37`, minSdk: `24`
 - Version catalog: `gradle/libs.versions.toml`
 
+## SOLID Principles
+
+- **S — Single Responsibility**: Every class does one thing. A repository stores/retrieves data. A service orchestrates domain operations. A ViewModel manages UI state. Never mix concerns.
+- **O — Open/Closed**: Extend behavior through composition and interfaces, not by modifying existing classes. Add new use cases or services rather than adding `if/else` branches to existing ones.
+- **L — Liskov Substitution**: Interface implementations are interchangeable. If `BrokerConnectionImpl` is swapped for a test fake, everything downstream works without changes.
+- **I — Interface Segregation**: Repository interfaces are narrow. `DeviceRepository` only exposes reads; `BrokerConnection` only exposes connection ops. Clients depend only on what they use.
+- **D — Dependency Inversion**: Domain and presentation depend on abstractions (interfaces in `domain/repository/`), never on concrete implementations. DI wires them at runtime.
+
+## Clean Architecture Layers
+
+```
+presentation/  →  UI, ViewModels, MVI contracts, theme, navigation
+domain/        →  Models, repository interfaces, use cases
+data/          →  Repository implementations, remote/data sources, DTOs
+```
+
+Rules:
+- **Domain is pure Kotlin.** No Compose, no coroutines framework, no platform APIs. Models are data classes/enums. Repository interfaces return `Flow` or `suspend` results.
+- **Data depends on domain.** Implementations import domain interfaces and models. Domain never imports data.
+- **Presentation depends on domain.** ViewModels inject domain services, never data-layer classes. UI maps domain models to UI models.
+- **One direction of dependency:** presentation → domain ← data. Domain is the center; it knows nothing about its consumers or providers.
+- **No god classes.** If a class has more than ~5 responsibilities, split it. Domain services orchestrate — they don't parse payloads, manage in-memory state, or know about MQTT topics.
+- **Use cases are mandatory.** Every interaction between presentation and domain goes through a use case. Each use case encapsulates one business operation with a single `operator fun invoke()` method. Use cases are small, focused, and named with verb-noun pairs (e.g. `ConnectToBroker`, `GetDeviceById`, `ObserveTelemetry`). They live in `domain/usecase/`, inject domain services or repositories, and are the only way ViewModels access domain logic. If a use case only delegates to one method, that's fine — it's a seam for testing and a boundary that keeps the domain explicit.
+
 ## Conventions
 
 - **New shared code** goes in `shared/src/commonMain/kotlin/dev/esteki/ipulse/`

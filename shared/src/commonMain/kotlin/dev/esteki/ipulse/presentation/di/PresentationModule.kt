@@ -9,10 +9,10 @@ val presentationModule = module {
         DashboardViewModel(
             connectToBroker = get(),
             subscribeToDeviceTopic = get(),
-            observeTelemetryUseCase = get(),
-            observeConnectionStateUseCase = get(),
-            observeConnectionEventsUseCase = get(),
-            observeSignalQualityUseCase = get()
+            observeTelemetry = get(),
+            observeConnectionState = get(),
+            observeConnectionEvents = get(),
+            observeSignalQuality = get()
         )
     }
 
@@ -20,8 +20,8 @@ val presentationModule = module {
         DeviceDetailViewModel(
             deviceId = params.get(),
             getDeviceById = get(),
-            observeConnectionEventsUseCase = get(),
-            observeSignalQualityUseCase = get()
+            observeConnectionEvents = get(),
+            observeSignalQuality = get()
         )
     }
 }

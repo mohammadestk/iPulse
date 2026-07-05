@@ -1,7 +1,7 @@
 package dev.esteki.ipulse.presentation.model
 
 import dev.esteki.ipulse.domain.model.Device
-import dev.esteki.ipulse.domain.model.DeviceConnectionState
+import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.SensorType
 
 data class DeviceUi(
@@ -11,7 +11,7 @@ data class DeviceUi(
     val sensorType: SensorType,
     val latestValue: String,
     val unit: String,
-    val connectionState: DeviceConnectionState,
+    val connectionState: ConnectionState,
     val isLive: Boolean
 )
 
@@ -23,7 +23,7 @@ fun Device.toDeviceUi(): DeviceUi = DeviceUi(
     latestValue = latestReading?.value?.format(1) ?: "--",
     unit = sensorType.unit,
     connectionState = connectionState,
-    isLive = connectionState == DeviceConnectionState.CONNECTED
+    isLive = connectionState == ConnectionState.CONNECTED
 )
 
 private fun Double.format(decimals: Int): String {

@@ -2,6 +2,10 @@ package dev.esteki.ipulse.domain.model
 
 import kotlin.time.Instant
 
+enum class EventType {
+    CONNECTED, CONNECTION_LOST, RECONNECTING, DISCONNECTED, ERROR
+}
+
 data class ConnectionEvent(
     val timestamp: Instant,
     val type: EventType,
@@ -9,11 +13,3 @@ data class ConnectionEvent(
     val attempt: Int? = null,
     val backoffSeconds: Double? = null
 )
-
-enum class EventType {
-    CONNECTED,
-    CONNECTION_LOST,
-    RECONNECTING,
-    DISCONNECTED,
-    ERROR
-}

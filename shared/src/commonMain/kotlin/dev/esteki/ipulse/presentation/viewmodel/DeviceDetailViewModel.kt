@@ -2,9 +2,9 @@ package dev.esteki.ipulse.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.esteki.ipulse.domain.usecase.GetDeviceByIdUseCase
-import dev.esteki.ipulse.domain.usecase.ObserveConnectionEventsUseCase
-import dev.esteki.ipulse.domain.usecase.ObserveSignalQualityUseCase
+import dev.esteki.ipulse.domain.usecase.GetDeviceById
+import dev.esteki.ipulse.domain.usecase.ObserveConnectionEvents
+import dev.esteki.ipulse.domain.usecase.ObserveSignalQuality
 import dev.esteki.ipulse.presentation.model.toConnectionEventUi
 import dev.esteki.ipulse.presentation.model.toDeviceUi
 import dev.esteki.ipulse.presentation.model.toSignalQualityUi
@@ -17,9 +17,9 @@ import kotlinx.coroutines.launch
 
 class DeviceDetailViewModel(
     private val deviceId: String,
-    private val getDeviceById: GetDeviceByIdUseCase,
-    private val observeConnectionEventsUseCase: ObserveConnectionEventsUseCase,
-    private val observeSignalQualityUseCase: ObserveSignalQualityUseCase
+    private val getDeviceById: GetDeviceById,
+    private val observeConnectionEvents: ObserveConnectionEvents,
+    private val observeSignalQuality: ObserveSignalQuality
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DeviceDetailState())
@@ -30,8 +30,8 @@ class DeviceDetailViewModel(
 
     init {
         loadDevice()
-        observeConnectionEvents()
-        observeSignalQuality()
+        collectConnectionEvents()
+        collectSignalQuality()
     }
 
     fun onAction(action: DeviceDetailAction) {
@@ -73,9 +73,9 @@ class DeviceDetailViewModel(
         }
     }
 
-    private fun observeConnectionEvents() {
+    private fun collectConnectionEvents() {
         viewModelScope.launch {
-            observeConnectionEventsUseCase().collect { event ->
+            observeConnectionEvents().collect { event ->
                 _state.update { state ->
                     val events = (listOf(event.toConnectionEventUi()) + state.connectionEvents).take(50)
                     state.copy(connectionEvents = events)
@@ -84,9 +84,9 @@ class DeviceDetailViewModel(
         }
     }
 
-    private fun observeSignalQuality() {
+    private fun collectSignalQuality() {
         viewModelScope.launch {
-            observeSignalQualityUseCase().collect { quality ->
+            observeSignalQuality().collect { quality ->
                 _state.update { it.copy(signalQuality = quality.toSignalQualityUi()) }
             }
         }

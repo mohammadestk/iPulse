@@ -5,15 +5,15 @@ import dev.esteki.ipulse.data.remote.MqttConnectionState
 import dev.esteki.ipulse.domain.model.ConnectionEvent
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.EventType
-import dev.esteki.ipulse.domain.repository.MqttRepository
+import dev.esteki.ipulse.domain.repository.BrokerConnection
+import dev.esteki.ipulse.domain.repository.BrokerMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Clock
-import kotlin.time.Instant
 
-class MqttRepositoryImpl(
+class BrokerConnectionImpl(
     private val mqttClient: MqttClientAdapter
-) : MqttRepository {
+) : BrokerConnection {
 
     override val connectionState: Flow<ConnectionState> = mqttClient.connectionState.map { state ->
         when (state) {
@@ -44,6 +44,10 @@ class MqttRepositoryImpl(
         ConnectionEvent(timestamp = now, type = eventType, message = message)
     }
 
+    override val messages: Flow<BrokerMessage> = mqttClient.messages.map { msg ->
+        BrokerMessage(topic = msg.topic, payload = msg.payload)
+    }
+
     override suspend fun connect(brokerUrl: String, port: Int) {
         mqttClient.connect(brokerUrl, port)
     }
@@ -54,13 +58,5 @@ class MqttRepositoryImpl(
 
     override suspend fun subscribe(topicFilter: String) {
         mqttClient.subscribe(topicFilter)
-    }
-
-    override suspend fun unsubscribe(topicFilter: String) {
-        mqttClient.unsubscribe(topicFilter)
-    }
-
-    override suspend fun publish(topic: String, payload: String, qos: Int) {
-        mqttClient.publish(topic, payload, qos)
     }
 }

@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.esteki.ipulse.domain.model.ConnectionState
-import dev.esteki.ipulse.domain.model.DeviceConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionEventUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
 import dev.esteki.ipulse.presentation.theme.*
@@ -134,15 +133,15 @@ private fun ReadoutPanel(
     latestValue: String,
     unit: String,
     sensorType: String,
-    connectionState: DeviceConnectionState,
+    connectionState: ConnectionState,
     signalQuality: SignalQualityUi?
 ) {
     val borderColor = when (connectionState) {
-        DeviceConnectionState.CONNECTED -> SignalCyanDim
-        DeviceConnectionState.RECONNECTING,
-        DeviceConnectionState.CONNECTING -> SignalAmberDim
-        DeviceConnectionState.ERROR -> FaultRedDim
-        DeviceConnectionState.DISCONNECTED -> Border
+        ConnectionState.CONNECTED -> SignalCyanDim
+        ConnectionState.RECONNECTING,
+        ConnectionState.CONNECTING -> SignalAmberDim
+        ConnectionState.ERROR -> FaultRedDim
+        ConnectionState.DISCONNECTED -> Border
     }
 
     Column(
@@ -163,20 +162,20 @@ private fun ReadoutPanel(
                 color = TextDim
             )
             val chipState = when (connectionState) {
-                DeviceConnectionState.CONNECTED -> ConnectionState.CONNECTED
-                DeviceConnectionState.CONNECTING,
-                DeviceConnectionState.RECONNECTING -> ConnectionState.RECONNECTING
-                DeviceConnectionState.ERROR -> ConnectionState.ERROR
-                DeviceConnectionState.DISCONNECTED -> ConnectionState.DISCONNECTED
+                ConnectionState.CONNECTED -> ConnectionState.CONNECTED
+                ConnectionState.CONNECTING,
+                ConnectionState.RECONNECTING -> ConnectionState.RECONNECTING
+                ConnectionState.ERROR -> ConnectionState.ERROR
+                ConnectionState.DISCONNECTED -> ConnectionState.DISCONNECTED
             }
             ConnectionChip(
                 state = chipState,
                 label = when (connectionState) {
-                    DeviceConnectionState.CONNECTED -> "Live"
-                    DeviceConnectionState.RECONNECTING -> "Reconnecting"
-                    DeviceConnectionState.CONNECTING -> "Connecting"
-                    DeviceConnectionState.ERROR -> "Error"
-                    DeviceConnectionState.DISCONNECTED -> "Offline"
+                    ConnectionState.CONNECTED -> "Live"
+                    ConnectionState.RECONNECTING -> "Reconnecting"
+                    ConnectionState.CONNECTING -> "Connecting"
+                    ConnectionState.ERROR -> "Error"
+                    ConnectionState.DISCONNECTED -> "Offline"
                 }
             )
         }
@@ -188,7 +187,7 @@ private fun ReadoutPanel(
             Text(
                 text = latestValue,
                 style = DataLargeStyle,
-                color = if (connectionState == DeviceConnectionState.CONNECTED) SignalCyan else TextDim
+                color = if (connectionState == ConnectionState.CONNECTED) SignalCyan else TextDim
             )
             Text(
                 text = unit,
