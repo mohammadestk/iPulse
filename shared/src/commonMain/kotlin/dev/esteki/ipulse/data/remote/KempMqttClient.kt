@@ -1,6 +1,7 @@
 package dev.esteki.ipulse.data.remote
 
 import de.kempmobil.ktor.mqtt.MqttClient
+import de.kempmobil.ktor.mqtt.PublishRequest
 import de.kempmobil.ktor.mqtt.QoS
 import de.kempmobil.ktor.mqtt.Topic
 import de.kempmobil.ktor.mqtt.TopicFilter
@@ -99,7 +100,7 @@ class KempMqttClient : MqttClientAdapter {
             1 -> QoS.AT_LEAST_ONCE
             else -> QoS.EXACTLY_ONE
         }
-        client?.publish(de.kempmobil.ktor.mqtt.PublishRequest(topic) {
+        client?.publish(PublishRequest(topic) {
             desiredQoS = mqttQos
             payload(payload)
         })

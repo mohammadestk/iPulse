@@ -15,8 +15,6 @@ class MqttRepositoryImpl(
     private val mqttClient: MqttClientAdapter
 ) : MqttRepository {
 
-    private val _connectionEvents = mutableListOf<ConnectionEvent>()
-
     override val connectionState: Flow<ConnectionState> = mqttClient.connectionState.map { state ->
         when (state) {
             MqttConnectionState.CONNECTED -> ConnectionState.CONNECTED
