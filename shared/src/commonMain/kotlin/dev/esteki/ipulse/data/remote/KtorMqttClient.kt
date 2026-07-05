@@ -3,6 +3,8 @@ package dev.esteki.ipulse.data.remote
 import dev.esteki.ipulse.data.model.MqttMessage
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
 import io.ktor.utils.io.core.toByteArray
 import io.ktor.websocket.Frame
 import io.ktor.websocket.WebSocketSession
@@ -41,7 +43,7 @@ class KtorMqttClient(
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     private var brokerUrl: String = ""
-    private var brokerPort: Int = 8080
+    private var brokerPort: Int = 8084
     private var packetId: Int = 0
     private val subscribedTopics = mutableSetOf<String>()
 
@@ -52,7 +54,10 @@ class KtorMqttClient(
 
         try {
             val wsUrl = "wss://$brokerUrl:$port/mqtt"
-            httpClient.webSocket(wsUrl) {
+            httpClient.webSocket(wsUrl, request = {
+                header(HttpHeaders.SecWebSocketProtocol, "mqtt")
+            }) {
+                println("Connected")
                 webSocketSession = this
                 sendMqttConnect()
                 val connAck = receiveMqttPacket()
@@ -64,7 +69,8 @@ class KtorMqttClient(
                     _connectionState.value = MqttConnectionState.ERROR
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            e.printStackTrace()
             _connectionState.value = MqttConnectionState.ERROR
             scheduleReconnect()
         }

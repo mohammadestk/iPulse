@@ -6,8 +6,8 @@ class ConnectToBrokerUseCase(
     private val mqttRepository: MqttRepository
 ) {
     companion object {
-        const val DEFAULT_BROKER = "test.mosquitto.org"
-        const val DEFAULT_PORT = 8081
+        const val DEFAULT_BROKER = "broker.emqx.io"
+        const val DEFAULT_PORT = 8084
     }
 
     suspend operator fun invoke(
