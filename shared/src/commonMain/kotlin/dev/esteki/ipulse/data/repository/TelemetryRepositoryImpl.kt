@@ -34,35 +34,7 @@ class TelemetryRepositoryImpl(
     private val readings = mutableMapOf<String, MutableList<TelemetryReading>>()
 
     init {
-//        seedSampleDevices()
         observeMqttMessages()
-    }
-
-    private fun seedSampleDevices() {
-        val now = Clock.System.now().toEpochMilliseconds()
-        val sampleData = listOf(
-            Triple("ward-b-bed4", "sensors/temp", 24.6),
-            Triple("ward-b-bed4", "sensors/pressure", 1013.0),
-            Triple("cold-storage-r2", "sensors/temp", -18.2),
-            Triple("loading-dock", "sensors/humidity", 61.0),
-            Triple("loading-dock", "sensors/temp", 19.4)
-        )
-        sampleData.forEach { (deviceId, topic, value) ->
-            val sensorType = SensorType.fromTopic(topic) ?: return@forEach
-            val instant = Instant.fromEpochMilliseconds(now)
-            val reading = TelemetryReading(value = value, sensorType = sensorType, timestamp = instant, topic = topic)
-            readings.getOrPut(deviceId) { mutableListOf() }.add(reading)
-            _devices.update { current ->
-                val device = current[deviceId] ?: Device(
-                    id = deviceId,
-                    name = formatDeviceName(deviceId),
-                    topic = topic,
-                    sensorType = sensorType
-                )
-                current + (deviceId to device.copy(latestReading = reading, connectionState = DeviceConnectionState.CONNECTED))
-            }
-        }
-        _signalQuality.value = SignalQuality(averageLatencyMs = 42.0, stability = Stability.STABLE, lastReceivedAt = Clock.System.now())
     }
 
     private fun observeMqttMessages() {
