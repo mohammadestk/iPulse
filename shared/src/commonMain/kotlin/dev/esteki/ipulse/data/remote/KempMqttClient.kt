@@ -1,9 +1,11 @@
 package dev.esteki.ipulse.data.remote
 
-import dev.esteki.ipulse.data.model.MqttMessage
+import de.kempmobil.ktor.mqtt.MqttClient
 import de.kempmobil.ktor.mqtt.QoS
 import de.kempmobil.ktor.mqtt.Topic
 import de.kempmobil.ktor.mqtt.TopicFilter
+import de.kempmobil.ktor.mqtt.ws.MqttClient
+import dev.esteki.ipulse.data.model.MqttMessage
 import io.ktor.http.Url
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +18,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class MqttClient : MqttClientAdapter {
+class KempMqttClient : MqttClientAdapter {
 
     private val _messages = MutableSharedFlow<MqttMessage>(extraBufferCapacity = 64)
     override val messages: SharedFlow<MqttMessage> = _messages.asSharedFlow()
@@ -24,7 +26,7 @@ class MqttClient : MqttClientAdapter {
     private val _connectionState = MutableStateFlow(MqttConnectionState.DISCONNECTED)
     override val connectionState: StateFlow<MqttConnectionState> = _connectionState.asStateFlow()
 
-    private var client: de.kempmobil.ktor.mqtt.MqttClient? = null
+    private var client: MqttClient? = null
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val subscribedTopics = mutableSetOf<String>()
 
@@ -33,7 +35,7 @@ class MqttClient : MqttClientAdapter {
 
         try {
             val wsUrl = "wss://$brokerUrl:$port/mqtt"
-            client = de.kempmobil.ktor.mqtt.ws.MqttClient(Url(wsUrl)) {
+            client = MqttClient(Url(wsUrl)) {
                 // No additional config needed
             }
 
@@ -43,6 +45,7 @@ class MqttClient : MqttClientAdapter {
                     resubscribeAll()
                     observePublishedPackets()
                 } else {
+                    println(connack.toString())
                     _connectionState.value = MqttConnectionState.ERROR
                 }
             }?.onFailure {
@@ -73,7 +76,8 @@ class MqttClient : MqttClientAdapter {
     override suspend fun disconnect() {
         try {
             client?.disconnect()
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
         client = null
         subscribedTopics.clear()
         _connectionState.value = MqttConnectionState.DISCONNECTED

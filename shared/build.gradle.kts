@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.internal.types.error.ErrorModuleDescriptor.platform
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -65,7 +66,7 @@ kotlin {
             implementation(libs.ktor.mqtt.core)
             implementation(libs.ktor.mqtt.client)
             implementation(libs.ktor.mqtt.client.ws)
-            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.cio)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }
