@@ -1,6 +1,6 @@
 package dev.esteki.ipulse.data.repository
 
-import dev.esteki.ipulse.data.remote.MqttClient
+import dev.esteki.ipulse.data.remote.MqttClientAdapter
 import dev.esteki.ipulse.data.remote.MqttConnectionState
 import dev.esteki.ipulse.domain.model.ConnectionEvent
 import dev.esteki.ipulse.domain.model.ConnectionState
@@ -12,7 +12,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 class MqttRepositoryImpl(
-    private val mqttClient: MqttClient
+    private val mqttClient: MqttClientAdapter
 ) : MqttRepository {
 
     private val _connectionEvents = mutableListOf<ConnectionEvent>()

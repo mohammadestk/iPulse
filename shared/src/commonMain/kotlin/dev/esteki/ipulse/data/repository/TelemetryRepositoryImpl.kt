@@ -1,7 +1,7 @@
 package dev.esteki.ipulse.data.repository
 
 import dev.esteki.ipulse.data.model.TelemetryPayload
-import dev.esteki.ipulse.data.remote.MqttClient
+import dev.esteki.ipulse.data.remote.MqttClientAdapter
 import dev.esteki.ipulse.domain.model.*
 import dev.esteki.ipulse.domain.repository.TelemetryRepository
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +18,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 class TelemetryRepositoryImpl(
-    private val mqttClient: MqttClient,
+    private val mqttClient: MqttClientAdapter,
     private val json: Json = Json { ignoreUnknownKeys = true }
 ) : TelemetryRepository {
 

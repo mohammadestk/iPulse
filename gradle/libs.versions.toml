@@ -13,7 +13,7 @@ androidx-testExt = "1.3.0"
 composeMultiplatform = "1.11.1"
 junit = "4.13.2"
 koin = "4.0.4"
-kmqtt = "1.0.0"
+ktor-mqtt = "1.1.0"
 kotlin = "2.4.0"
 kotlin-wrappers = "2026.7.0"
 kotlinx-coroutines = "1.11.0"
@@ -42,8 +42,9 @@ compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-previ
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutinesSwing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-kmqtt-common = { module = "io.github.davidepianca98:kmqtt-common", version.ref = "kmqtt" }
-kmqtt-client = { module = "io.github.davidepianca98:kmqtt-client", version.ref = "kmqtt" }
+ktor-mqtt-core = { module = "de.kempmobil.ktor.mqtt:mqtt-core", version.ref = "ktor-mqtt" }
+ktor-mqtt-client = { module = "de.kempmobil.ktor.mqtt:mqtt-client", version.ref = "ktor-mqtt" }
+ktor-mqtt-client-ws = { module = "de.kempmobil.ktor.mqtt:mqtt-client-ws", version.ref = "ktor-mqtt" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }

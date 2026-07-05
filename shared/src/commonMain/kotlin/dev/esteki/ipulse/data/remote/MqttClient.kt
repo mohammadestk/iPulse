@@ -3,7 +3,7 @@ package dev.esteki.ipulse.data.remote
 import dev.esteki.ipulse.data.model.MqttMessage
 import kotlinx.coroutines.flow.Flow
 
-interface MqttClient {
+interface MqttClientAdapter {
     val messages: Flow<MqttMessage>
     val connectionState: Flow<MqttConnectionState>
 

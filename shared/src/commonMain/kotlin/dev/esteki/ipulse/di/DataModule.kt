@@ -1,7 +1,7 @@
 package dev.esteki.ipulse.di
 
-import dev.esteki.ipulse.data.remote.KmqttClient
-import dev.esteki.ipulse.data.remote.MqttClient
+import dev.esteki.ipulse.data.remote.KtorMqttClient
+import dev.esteki.ipulse.data.remote.MqttClientAdapter
 import dev.esteki.ipulse.data.repository.MqttRepositoryImpl
 import dev.esteki.ipulse.data.repository.TelemetryRepositoryImpl
 import dev.esteki.ipulse.domain.repository.MqttRepository
@@ -27,8 +27,8 @@ val dataModule = module {
         }
     }
 
-    single<MqttClient> {
-        KmqttClient()
+    single<MqttClientAdapter> {
+        KtorMqttClient()
     }
 
     single<MqttRepository> {

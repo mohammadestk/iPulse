@@ -62,8 +62,10 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kmqtt.common)
-            implementation(libs.kmqtt.client)
+            implementation(libs.ktor.mqtt.core)
+            implementation(libs.ktor.mqtt.client)
+            implementation(libs.ktor.mqtt.client.ws)
+            implementation(libs.ktor.client.core)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
         }
