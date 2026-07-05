@@ -69,6 +69,7 @@ kotlin {
             implementation(libs.ktor.client.cio)
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
+            implementation(libs.navigation3.ui)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
