@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 class DashboardViewModel(
     private val connectToBroker: ConnectToBrokerUseCase,
     private val disconnectFromBroker: DisconnectFromBrokerUseCase,
+    private val subscribeToDeviceTopic: SubscribeToDeviceTopicUseCase,
     private val observeTelemetryUseCase: ObserveTelemetryUseCase,
     private val observeConnectionStateUseCase: ObserveConnectionStateUseCase,
     private val observeConnectionEventsUseCase: ObserveConnectionEventsUseCase,
@@ -56,6 +57,7 @@ class DashboardViewModel(
             _state.update { it.copy(isLoading = true) }
             try {
                 connectToBroker()
+                subscribeToDeviceTopic("#")
                 _state.update { it.copy(isLoading = false) }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false) }
