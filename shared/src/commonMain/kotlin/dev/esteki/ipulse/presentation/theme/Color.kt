@@ -1,4 +1,4 @@
-package dev.esteki.ipulse.ui.theme
+package dev.esteki.ipulse.presentation.theme
 
 import androidx.compose.ui.graphics.Color
 

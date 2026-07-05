@@ -1,24 +1,19 @@
-package dev.esteki.ipulse.ui.viewmodel
+package dev.esteki.ipulse.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.esteki.ipulse.domain.model.DeviceConnectionState
-import dev.esteki.ipulse.domain.model.SensorType
-import dev.esteki.ipulse.domain.model.TelemetryReading
 import dev.esteki.ipulse.domain.usecase.GetDeviceByIdUseCase
 import dev.esteki.ipulse.domain.usecase.ObserveConnectionEventsUseCase
 import dev.esteki.ipulse.domain.usecase.ObserveSignalQualityUseCase
-import dev.esteki.ipulse.ui.model.toConnectionEventUi
-import dev.esteki.ipulse.ui.model.toDeviceUi
-import dev.esteki.ipulse.ui.model.toSignalQualityUi
-import dev.esteki.ipulse.ui.screen.DeviceDetailAction
-import dev.esteki.ipulse.ui.screen.DeviceDetailEvent
-import dev.esteki.ipulse.ui.screen.DeviceDetailState
-import dev.esteki.ipulse.ui.screen.ReadingUi
+import dev.esteki.ipulse.presentation.model.toConnectionEventUi
+import dev.esteki.ipulse.presentation.model.toDeviceUi
+import dev.esteki.ipulse.presentation.model.toSignalQualityUi
+import dev.esteki.ipulse.presentation.screen.DeviceDetailAction
+import dev.esteki.ipulse.presentation.screen.DeviceDetailEvent
+import dev.esteki.ipulse.presentation.screen.DeviceDetailState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlin.time.Instant
 
 class DeviceDetailViewModel(
     private val deviceId: String,

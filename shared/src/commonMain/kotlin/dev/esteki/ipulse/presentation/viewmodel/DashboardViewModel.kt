@@ -1,15 +1,15 @@
-package dev.esteki.ipulse.ui.viewmodel
+package dev.esteki.ipulse.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.esteki.ipulse.domain.usecase.*
-import dev.esteki.ipulse.ui.model.toConnectionEventUi
-import dev.esteki.ipulse.ui.model.toConnectionStateUi
-import dev.esteki.ipulse.ui.model.toDeviceUi
-import dev.esteki.ipulse.ui.model.toSignalQualityUi
-import dev.esteki.ipulse.ui.screen.DashboardAction
-import dev.esteki.ipulse.ui.screen.DashboardEvent
-import dev.esteki.ipulse.ui.screen.DashboardState
+import dev.esteki.ipulse.presentation.model.toConnectionEventUi
+import dev.esteki.ipulse.presentation.model.toConnectionStateUi
+import dev.esteki.ipulse.presentation.model.toDeviceUi
+import dev.esteki.ipulse.presentation.model.toSignalQualityUi
+import dev.esteki.ipulse.presentation.screen.DashboardAction
+import dev.esteki.ipulse.presentation.screen.DashboardEvent
+import dev.esteki.ipulse.presentation.screen.DashboardState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

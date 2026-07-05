@@ -1,4 +1,4 @@
-package dev.esteki.ipulse.ui.model
+package dev.esteki.ipulse.presentation.model
 
 import dev.esteki.ipulse.domain.model.ConnectionEvent
 import dev.esteki.ipulse.domain.model.EventType

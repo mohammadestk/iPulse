@@ -1,4 +1,4 @@
-package dev.esteki.ipulse.ui.screen
+package dev.esteki.ipulse.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,15 +15,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.esteki.ipulse.domain.model.DeviceConnectionState
-import dev.esteki.ipulse.ui.model.ConnectionStateUi
-import dev.esteki.ipulse.ui.model.DeviceUi
-import dev.esteki.ipulse.ui.model.SignalQualityUi
-import dev.esteki.ipulse.ui.theme.*
+import dev.esteki.ipulse.presentation.model.ConnectionStateUi
+import dev.esteki.ipulse.presentation.model.DeviceUi
+import dev.esteki.ipulse.presentation.model.SignalQualityUi
+import dev.esteki.ipulse.presentation.theme.*
 
 @Composable
 fun DashboardRoot(
     onNavigateToDeviceDetail: (String) -> Unit,
-    viewModel: dev.esteki.ipulse.ui.viewmodel.DashboardViewModel
+    viewModel: dev.esteki.ipulse.presentation.viewmodel.DashboardViewModel
 ) {
     val state by viewModel.state.collectAsState()
 

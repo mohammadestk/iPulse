@@ -8,21 +8,23 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
-import dev.esteki.ipulse.di.dataModule
-import dev.esteki.ipulse.ui.screen.DashboardRoot
-import dev.esteki.ipulse.ui.screen.DeviceDetailRoot
-import dev.esteki.ipulse.ui.theme.Background
-import dev.esteki.ipulse.ui.theme.Border
-import dev.esteki.ipulse.ui.theme.DeviceChrome
-import dev.esteki.ipulse.ui.theme.FaultRed
-import dev.esteki.ipulse.ui.theme.Panel
-import dev.esteki.ipulse.ui.theme.PanelRaised
-import dev.esteki.ipulse.ui.theme.SignalAmber
-import dev.esteki.ipulse.ui.theme.SignalCyan
-import dev.esteki.ipulse.ui.theme.TextMuted
-import dev.esteki.ipulse.ui.theme.TextPrimary
-import dev.esteki.ipulse.ui.viewmodel.DashboardViewModel
-import dev.esteki.ipulse.ui.viewmodel.DeviceDetailViewModel
+import dev.esteki.ipulse.data.di.dataModule
+import dev.esteki.ipulse.domain.di.domainModule
+import dev.esteki.ipulse.presentation.di.presentationModule
+import dev.esteki.ipulse.presentation.screen.DashboardRoot
+import dev.esteki.ipulse.presentation.screen.DeviceDetailRoot
+import dev.esteki.ipulse.presentation.theme.Background
+import dev.esteki.ipulse.presentation.theme.Border
+import dev.esteki.ipulse.presentation.theme.DeviceChrome
+import dev.esteki.ipulse.presentation.theme.FaultRed
+import dev.esteki.ipulse.presentation.theme.Panel
+import dev.esteki.ipulse.presentation.theme.PanelRaised
+import dev.esteki.ipulse.presentation.theme.SignalAmber
+import dev.esteki.ipulse.presentation.theme.SignalCyan
+import dev.esteki.ipulse.presentation.theme.TextMuted
+import dev.esteki.ipulse.presentation.theme.TextPrimary
+import dev.esteki.ipulse.presentation.viewmodel.DashboardViewModel
+import dev.esteki.ipulse.presentation.viewmodel.DeviceDetailViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -68,7 +70,9 @@ private val navConfig = SavedStateConfiguration {
 @Composable
 fun App() {
     KoinApplication(
-        configuration = koinConfiguration(declaration = { modules(dataModule) }),
+        configuration = koinConfiguration(declaration = {
+            modules(dataModule, domainModule, presentationModule)
+        }),
         content = {
             MaterialTheme(colorScheme = DarkColorScheme) {
                 val backStack = rememberNavBackStack(navConfig, Route.Dashboard)

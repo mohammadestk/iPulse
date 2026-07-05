@@ -1,4 +1,4 @@
-package dev.esteki.ipulse.ui.screen
+package dev.esteki.ipulse.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,19 +9,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.DeviceConnectionState
-import dev.esteki.ipulse.ui.model.ConnectionEventUi
-import dev.esteki.ipulse.ui.model.DeviceUi
-import dev.esteki.ipulse.ui.model.SignalQualityUi
-import dev.esteki.ipulse.ui.theme.*
+import dev.esteki.ipulse.presentation.model.ConnectionEventUi
+import dev.esteki.ipulse.presentation.model.SignalQualityUi
+import dev.esteki.ipulse.presentation.theme.*
 
 @Composable
 fun DeviceDetailRoot(
     onNavigateBack: () -> Unit,
-    viewModel: dev.esteki.ipulse.ui.viewmodel.DeviceDetailViewModel
+    viewModel: dev.esteki.ipulse.presentation.viewmodel.DeviceDetailViewModel
 ) {
     val state by viewModel.state.collectAsState()
 

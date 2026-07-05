@@ -1,10 +1,10 @@
-package dev.esteki.ipulse.ui.screen
+package dev.esteki.ipulse.presentation.screen
 
 import dev.esteki.ipulse.domain.model.ConnectionState
-import dev.esteki.ipulse.ui.model.ConnectionEventUi
-import dev.esteki.ipulse.ui.model.ConnectionStateUi
-import dev.esteki.ipulse.ui.model.DeviceUi
-import dev.esteki.ipulse.ui.model.SignalQualityUi
+import dev.esteki.ipulse.presentation.model.ConnectionEventUi
+import dev.esteki.ipulse.presentation.model.ConnectionStateUi
+import dev.esteki.ipulse.presentation.model.DeviceUi
+import dev.esteki.ipulse.presentation.model.SignalQualityUi
 
 data class DashboardState(
     val devices: List<DeviceUi> = emptyList(),

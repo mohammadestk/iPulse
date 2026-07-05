@@ -1,9 +1,8 @@
-package dev.esteki.ipulse.ui.model
+package dev.esteki.ipulse.presentation.model
 
 import dev.esteki.ipulse.domain.model.Device
 import dev.esteki.ipulse.domain.model.DeviceConnectionState
 import dev.esteki.ipulse.domain.model.SensorType
-import dev.esteki.ipulse.domain.model.TelemetryReading
 
 data class DeviceUi(
     val id: String,
