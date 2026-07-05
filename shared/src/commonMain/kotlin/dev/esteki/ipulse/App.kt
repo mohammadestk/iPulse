@@ -1,71 +1,24 @@
 package dev.esteki.ipulse
 
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import androidx.savedstate.serialization.SavedStateConfiguration
 import dev.esteki.ipulse.data.di.dataModule
 import dev.esteki.ipulse.domain.di.domainModule
 import dev.esteki.ipulse.presentation.di.presentationModule
+import dev.esteki.ipulse.presentation.navigation.Route
+import dev.esteki.ipulse.presentation.navigation.navConfig
 import dev.esteki.ipulse.presentation.screen.DashboardRoot
 import dev.esteki.ipulse.presentation.screen.DeviceDetailRoot
-import dev.esteki.ipulse.presentation.theme.Background
-import dev.esteki.ipulse.presentation.theme.Border
-import dev.esteki.ipulse.presentation.theme.DeviceChrome
-import dev.esteki.ipulse.presentation.theme.FaultRed
-import dev.esteki.ipulse.presentation.theme.Panel
-import dev.esteki.ipulse.presentation.theme.PanelRaised
-import dev.esteki.ipulse.presentation.theme.SignalAmber
-import dev.esteki.ipulse.presentation.theme.SignalCyan
-import dev.esteki.ipulse.presentation.theme.TextMuted
-import dev.esteki.ipulse.presentation.theme.TextPrimary
+import dev.esteki.ipulse.presentation.theme.DarkColorScheme
 import dev.esteki.ipulse.presentation.viewmodel.DashboardViewModel
 import dev.esteki.ipulse.presentation.viewmodel.DeviceDetailViewModel
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.modules.polymorphic
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 import org.koin.dsl.koinConfiguration
-
-private val DarkColorScheme = darkColorScheme(
-    primary = SignalAmber,
-    secondary = SignalCyan,
-    tertiary = FaultRed,
-    background = Background,
-    surface = Panel,
-    surfaceVariant = PanelRaised,
-    onPrimary = DeviceChrome,
-    onSecondary = DeviceChrome,
-    onTertiary = DeviceChrome,
-    onBackground = TextPrimary,
-    onSurface = TextPrimary,
-    onSurfaceVariant = TextMuted,
-    outline = Border
-)
-
-@Serializable
-sealed interface Route : NavKey {
-    @Serializable
-    data object Dashboard : Route
-
-    @Serializable
-    data class DeviceDetail(val deviceId: String) : Route
-}
-
-private val navConfig = SavedStateConfiguration {
-    serializersModule = SerializersModule {
-        polymorphic(NavKey::class) {
-            subclass(Route.Dashboard::class, Route.Dashboard.serializer())
-            subclass(Route.DeviceDetail::class, Route.DeviceDetail.serializer())
-        }
-    }
-}
 
 @Composable
 fun App() {
