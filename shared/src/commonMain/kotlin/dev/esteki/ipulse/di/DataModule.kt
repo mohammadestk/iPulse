@@ -10,7 +10,9 @@ import dev.esteki.ipulse.domain.usecase.*
 import dev.esteki.ipulse.ui.viewmodel.DashboardViewModel
 import dev.esteki.ipulse.ui.viewmodel.DeviceDetailViewModel
 import io.ktor.client.*
+import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.websocket.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.client.plugins.contentnegotiation.*
 import kotlinx.serialization.json.Json
@@ -25,10 +27,11 @@ val dataModule = module {
     }
 
     single<HttpClient> {
-        HttpClient {
+        HttpClient(CIO) {
             install(WebSockets)
-            install(ContentNegotiation) {
-                json(get())
+            install(Logging) {
+                logger = Logger.DEFAULT
+                level = LogLevel.ALL
             }
         }
     }
