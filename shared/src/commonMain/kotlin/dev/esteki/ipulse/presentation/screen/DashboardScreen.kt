@@ -14,16 +14,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.DeviceConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionStateUi
 import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
 import dev.esteki.ipulse.presentation.theme.*
+import dev.esteki.ipulse.presentation.viewmodel.DashboardViewModel
 
 @Composable
 fun DashboardRoot(
     onNavigateToDeviceDetail: (String) -> Unit,
-    viewModel: dev.esteki.ipulse.presentation.viewmodel.DashboardViewModel
+    viewModel: DashboardViewModel
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -152,16 +154,16 @@ private fun ConnectionStatusBar(
 
 @Composable
 fun ConnectionChip(
-    state: dev.esteki.ipulse.domain.model.ConnectionState,
+    state: ConnectionState,
     label: String,
     modifier: Modifier = Modifier
 ) {
     val (color, dimColor) = when (state) {
-        dev.esteki.ipulse.domain.model.ConnectionState.CONNECTED -> SignalCyan to SignalCyanDim
-        dev.esteki.ipulse.domain.model.ConnectionState.CONNECTING,
-        dev.esteki.ipulse.domain.model.ConnectionState.RECONNECTING -> SignalAmber to SignalAmberDim
-        dev.esteki.ipulse.domain.model.ConnectionState.ERROR -> FaultRed to FaultRedDim
-        dev.esteki.ipulse.domain.model.ConnectionState.DISCONNECTED -> TextDim to Border
+        ConnectionState.CONNECTED -> SignalCyan to SignalCyanDim
+        ConnectionState.CONNECTING,
+        ConnectionState.RECONNECTING -> SignalAmber to SignalAmberDim
+        ConnectionState.ERROR -> FaultRed to FaultRedDim
+        ConnectionState.DISCONNECTED -> TextDim to Border
     }
 
     Row(
@@ -229,8 +231,8 @@ private fun DeviceRow(
             Spacer(modifier = Modifier.height(4.dp))
             ConnectionChip(
                 state = if (device.connectionState == DeviceConnectionState.CONNECTED)
-                    dev.esteki.ipulse.domain.model.ConnectionState.CONNECTED
-                else dev.esteki.ipulse.domain.model.ConnectionState.DISCONNECTED,
+                    ConnectionState.CONNECTED
+                else ConnectionState.DISCONNECTED,
                 label = if (device.isLive) "live" else "offline"
             )
         }

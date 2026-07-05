@@ -15,11 +15,12 @@ import dev.esteki.ipulse.domain.model.DeviceConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionEventUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
 import dev.esteki.ipulse.presentation.theme.*
+import dev.esteki.ipulse.presentation.viewmodel.DeviceDetailViewModel
 
 @Composable
 fun DeviceDetailRoot(
     onNavigateBack: () -> Unit,
-    viewModel: dev.esteki.ipulse.presentation.viewmodel.DeviceDetailViewModel
+    viewModel: DeviceDetailViewModel
 ) {
     val state by viewModel.state.collectAsState()
 
