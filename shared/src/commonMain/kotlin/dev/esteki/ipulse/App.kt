@@ -1,6 +1,5 @@
 package dev.esteki.ipulse
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
@@ -14,7 +13,7 @@ import dev.esteki.ipulse.presentation.navigation.Route
 import dev.esteki.ipulse.presentation.navigation.navConfig
 import dev.esteki.ipulse.presentation.screen.DashboardRoot
 import dev.esteki.ipulse.presentation.screen.DeviceDetailRoot
-import dev.esteki.ipulse.presentation.theme.DarkColorScheme
+import dev.esteki.ipulse.presentation.theme.IPulseThemeContent
 import org.koin.compose.KoinApplication
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -29,7 +28,7 @@ fun App() {
             },
         ),
         content = {
-            MaterialTheme(colorScheme = DarkColorScheme) {
+            IPulseThemeContent {
                 val backStack = rememberNavBackStack(navConfig, Route.Dashboard)
 
                 NavDisplay(

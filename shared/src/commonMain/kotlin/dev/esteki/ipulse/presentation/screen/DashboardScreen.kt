@@ -32,26 +32,7 @@ import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionStateUi
 import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
-import dev.esteki.ipulse.presentation.theme.Background
-import dev.esteki.ipulse.presentation.theme.BodySmallStyle
-import dev.esteki.ipulse.presentation.theme.Border
-import dev.esteki.ipulse.presentation.theme.BorderSoft
-import dev.esteki.ipulse.presentation.theme.CaptionStyle
-import dev.esteki.ipulse.presentation.theme.DataSmallStyle
-import dev.esteki.ipulse.presentation.theme.FaultRed
-import dev.esteki.ipulse.presentation.theme.FaultRedDim
-import dev.esteki.ipulse.presentation.theme.MonoMicroStyle
-import dev.esteki.ipulse.presentation.theme.Panel
-import dev.esteki.ipulse.presentation.theme.PanelInset
-import dev.esteki.ipulse.presentation.theme.SignalAmber
-import dev.esteki.ipulse.presentation.theme.SignalAmberDim
-import dev.esteki.ipulse.presentation.theme.SignalCyan
-import dev.esteki.ipulse.presentation.theme.SignalCyanDim
-import dev.esteki.ipulse.presentation.theme.SubtitleStyle
-import dev.esteki.ipulse.presentation.theme.TextDim
-import dev.esteki.ipulse.presentation.theme.TextMuted
-import dev.esteki.ipulse.presentation.theme.TextPrimary
-import dev.esteki.ipulse.presentation.theme.TitleStyle
+import dev.esteki.ipulse.presentation.theme.IPulseTheme
 import dev.esteki.ipulse.presentation.viewmodel.DashboardViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -86,27 +67,25 @@ fun DashboardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(IPulseTheme.colors.background)
             .padding(16.dp)
     ) {
-        // Header
         Text(
             text = "Sensors",
-            style = TitleStyle,
-            color = TextPrimary
+            style = IPulseTheme.typography.title,
+            color = IPulseTheme.colors.textPrimary
         )
 
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
             text = "broker: broker.emqx.io",
-            style = MonoMicroStyle,
-            color = TextDim
+            style = IPulseTheme.typography.monoMicro,
+            color = IPulseTheme.colors.textDim
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Connection status bar
         ConnectionStatusBar(
             connectionState = state.connectionState,
             signalQuality = state.signalQuality
@@ -114,7 +93,6 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Search bar
         OutlinedTextField(
             value = state.searchQuery,
             onValueChange = { onAction(DashboardAction.OnSearchQueryChange(it)) },
@@ -122,24 +100,23 @@ fun DashboardScreen(
             placeholder = {
                 Text(
                     text = "filter by topic or name",
-                    style = MonoMicroStyle,
-                    color = TextDim
+                    style = IPulseTheme.typography.monoMicro,
+                    color = IPulseTheme.colors.textDim
                 )
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Border,
-                unfocusedBorderColor = BorderSoft,
-                focusedContainerColor = PanelInset,
-                unfocusedContainerColor = PanelInset
+                focusedBorderColor = IPulseTheme.colors.border,
+                unfocusedBorderColor = IPulseTheme.colors.borderSoft,
+                focusedContainerColor = IPulseTheme.colors.panelInset,
+                unfocusedContainerColor = IPulseTheme.colors.panelInset
             ),
             shape = RoundedCornerShape(4.dp),
-            textStyle = MonoMicroStyle.copy(color = TextPrimary),
+            textStyle = IPulseTheme.typography.monoMicro.copy(color = IPulseTheme.colors.textPrimary),
             singleLine = true
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Device list
         if (state.filteredDevices.isEmpty()) {
             EmptyState()
         } else {
@@ -166,7 +143,7 @@ private fun ConnectionStatusBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Panel, RoundedCornerShape(4.dp))
+            .background(IPulseTheme.colors.panel, RoundedCornerShape(4.dp))
             .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -179,8 +156,8 @@ private fun ConnectionStatusBar(
         signalQuality?.let { quality ->
             Text(
                 text = quality.displayLabel,
-                style = MonoMicroStyle,
-                color = TextDim
+                style = IPulseTheme.typography.monoMicro,
+                color = IPulseTheme.colors.textDim
             )
         }
     }
@@ -193,12 +170,12 @@ fun ConnectionChip(
     modifier: Modifier = Modifier
 ) {
     val (color, dimColor) = when (state) {
-        ConnectionState.CONNECTED -> SignalCyan to SignalCyanDim
+        ConnectionState.CONNECTED -> IPulseTheme.colors.signalCyan to IPulseTheme.colors.signalCyanDim
         ConnectionState.CONNECTING,
-        ConnectionState.RECONNECTING -> SignalAmber to SignalAmberDim
+        ConnectionState.RECONNECTING -> IPulseTheme.colors.signalAmber to IPulseTheme.colors.signalAmberDim
 
-        ConnectionState.ERROR -> FaultRed to FaultRedDim
-        ConnectionState.DISCONNECTED -> TextDim to Border
+        ConnectionState.ERROR -> IPulseTheme.colors.faultRed to IPulseTheme.colors.faultRedDim
+        ConnectionState.DISCONNECTED -> IPulseTheme.colors.textDim to IPulseTheme.colors.border
     }
 
     Row(
@@ -216,7 +193,7 @@ fun ConnectionChip(
         )
         Text(
             text = label,
-            style = MonoMicroStyle,
+            style = IPulseTheme.typography.monoMicro,
             color = color
         )
     }
@@ -230,7 +207,7 @@ private fun DeviceRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Panel, RoundedCornerShape(4.dp))
+            .background(IPulseTheme.colors.panel, RoundedCornerShape(4.dp))
             .clickable(onClick = onClick)
             .padding(14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -239,13 +216,13 @@ private fun DeviceRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = device.name,
-                style = BodySmallStyle,
-                color = TextPrimary
+                style = IPulseTheme.typography.bodySmall,
+                color = IPulseTheme.colors.textPrimary
             )
             Text(
                 text = device.topic,
-                style = MonoMicroStyle,
-                color = TextDim
+                style = IPulseTheme.typography.monoMicro,
+                color = IPulseTheme.colors.textDim
             )
         }
 
@@ -253,13 +230,13 @@ private fun DeviceRow(
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     text = device.latestValue,
-                    style = DataSmallStyle,
-                    color = if (device.isLive) TextPrimary else TextDim
+                    style = IPulseTheme.typography.dataSmall,
+                    color = if (device.isLive) IPulseTheme.colors.textPrimary else IPulseTheme.colors.textDim
                 )
                 Text(
                     text = device.unit,
-                    style = MonoMicroStyle,
-                    color = TextDim,
+                    style = IPulseTheme.typography.monoMicro,
+                    color = IPulseTheme.colors.textDim,
                     modifier = Modifier.padding(start = 2.dp)
                 )
             }
@@ -285,15 +262,15 @@ private fun EmptyState() {
     ) {
         Text(
             text = "No devices yet",
-            style = SubtitleStyle,
-            color = TextPrimary,
+            style = IPulseTheme.typography.subtitle,
+            color = IPulseTheme.colors.textPrimary,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Nothing has published to\nany topic since this app started listening.",
-            style = CaptionStyle,
-            color = TextMuted,
+            style = IPulseTheme.typography.caption,
+            color = IPulseTheme.colors.textMuted,
             textAlign = TextAlign.Center
         )
     }

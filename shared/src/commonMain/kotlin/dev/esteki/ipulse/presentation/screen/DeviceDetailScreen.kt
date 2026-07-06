@@ -14,7 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionEventUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
-import dev.esteki.ipulse.presentation.theme.*
+import dev.esteki.ipulse.presentation.theme.IPulseTheme
 import dev.esteki.ipulse.presentation.viewmodel.DeviceDetailViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -49,10 +49,9 @@ fun DeviceDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(IPulseTheme.colors.background)
             .padding(16.dp)
     ) {
-        // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -61,37 +60,35 @@ fun DeviceDetailScreen(
             TextButton(onClick = { onAction(DeviceDetailAction.OnBackClick) }) {
                 Text(
                     text = "< Back",
-                    style = ButtonLabelStyle,
-                    color = TextMuted
+                    style = IPulseTheme.typography.buttonLabel,
+                    color = IPulseTheme.colors.textMuted
                 )
             }
             TextButton(onClick = { onAction(DeviceDetailAction.OnRefreshClick) }) {
                 Text(
                     text = "Refresh",
-                    style = ButtonLabelStyle,
-                    color = TextMuted
+                    style = IPulseTheme.typography.buttonLabel,
+                    color = IPulseTheme.colors.textMuted
                 )
             }
         }
 
-        // Device name
         Text(
             text = state.device?.name ?: "Unknown Device",
-            style = TitleStyle,
-            color = TextPrimary
+            style = IPulseTheme.typography.title,
+            color = IPulseTheme.colors.textPrimary
         )
 
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
             text = state.device?.topic ?: "",
-            style = MonoMicroStyle,
-            color = TextDim
+            style = IPulseTheme.typography.monoMicro,
+            color = IPulseTheme.colors.textDim
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Main readout panel
         ReadoutPanel(
             latestValue = state.latestValue,
             unit = state.unit,
@@ -102,21 +99,19 @@ fun DeviceDetailScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Connection log header
         Text(
             text = "Connection log",
-            style = DataSmallStyle,
-            color = TextPrimary
+            style = IPulseTheme.typography.dataSmall,
+            color = IPulseTheme.colors.textPrimary
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Connection events
         if (state.connectionEvents.isEmpty()) {
             Text(
                 text = "No connection events yet",
-                style = CaptionStyle,
-                color = TextDim
+                style = IPulseTheme.typography.caption,
+                color = IPulseTheme.colors.textDim
             )
         } else {
             LazyColumn(
@@ -139,21 +134,12 @@ private fun ReadoutPanel(
     connectionState: ConnectionState,
     signalQuality: SignalQualityUi?
 ) {
-    val borderColor = when (connectionState) {
-        ConnectionState.CONNECTED -> SignalCyanDim
-        ConnectionState.RECONNECTING,
-        ConnectionState.CONNECTING -> SignalAmberDim
-        ConnectionState.ERROR -> FaultRedDim
-        ConnectionState.DISCONNECTED -> Border
-    }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Panel, RoundedCornerShape(4.dp))
+            .background(IPulseTheme.colors.panel, RoundedCornerShape(4.dp))
             .padding(22.dp)
     ) {
-        // Label row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -161,18 +147,11 @@ private fun ReadoutPanel(
         ) {
             Text(
                 text = sensorType,
-                style = OverlineStyle,
-                color = TextDim
+                style = IPulseTheme.typography.overline,
+                color = IPulseTheme.colors.textDim
             )
-            val chipState = when (connectionState) {
-                ConnectionState.CONNECTED -> ConnectionState.CONNECTED
-                ConnectionState.CONNECTING,
-                ConnectionState.RECONNECTING -> ConnectionState.RECONNECTING
-                ConnectionState.ERROR -> ConnectionState.ERROR
-                ConnectionState.DISCONNECTED -> ConnectionState.DISCONNECTED
-            }
             ConnectionChip(
-                state = chipState,
+                state = connectionState,
                 label = when (connectionState) {
                     ConnectionState.CONNECTED -> "Live"
                     ConnectionState.RECONNECTING -> "Reconnecting"
@@ -185,28 +164,26 @@ private fun ReadoutPanel(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Value
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
                 text = latestValue,
-                style = DataLargeStyle,
-                color = if (connectionState == ConnectionState.CONNECTED) SignalCyan else TextDim
+                style = IPulseTheme.typography.dataLarge,
+                color = if (connectionState == ConnectionState.CONNECTED) IPulseTheme.colors.signalCyan else IPulseTheme.colors.textDim
             )
             Text(
                 text = unit,
-                style = DataMediumStyle,
-                color = TextDim,
+                style = IPulseTheme.typography.dataMedium,
+                color = IPulseTheme.colors.textDim,
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
             )
         }
 
-        // Signal quality
         if (signalQuality != null) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = signalQuality.displayLabel,
-                style = MonoMicroStyle,
-                color = TextDim
+                style = IPulseTheme.typography.monoMicro,
+                color = IPulseTheme.colors.textDim
             )
         }
     }
@@ -222,14 +199,14 @@ private fun ConnectionEventRow(event: ConnectionEventUi) {
     ) {
         Text(
             text = event.displayTime,
-            style = MonoMicroStyle,
-            color = TextDim
+            style = IPulseTheme.typography.monoMicro,
+            color = IPulseTheme.colors.textDim
         )
         Text(
             text = event.message,
-            style = CaptionStyle,
-            color = TextMuted
+            style = IPulseTheme.typography.caption,
+            color = IPulseTheme.colors.textMuted
         )
     }
-    HorizontalDivider(color = BorderSoft)
+    HorizontalDivider(color = IPulseTheme.colors.borderSoft)
 }
