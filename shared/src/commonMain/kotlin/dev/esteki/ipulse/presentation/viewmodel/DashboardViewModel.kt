@@ -30,6 +30,8 @@ class DashboardViewModel(
     val events = _events.receiveAsFlow()
 
     init {
+        println("home viewmodel initialized")
+
         collectConnectionState()
         collectTelemetryDevices()
         collectConnectionEvents()
@@ -94,5 +96,9 @@ class DashboardViewModel(
                 _state.update { it.copy(signalQuality = quality.toSignalQualityUi()) }
             }
         }
+    }
+
+    override fun onCleared() {
+        println("Home viewmodel cleared")
     }
 }

@@ -10,18 +10,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionEventUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
 import dev.esteki.ipulse.presentation.theme.*
 import dev.esteki.ipulse.presentation.viewmodel.DeviceDetailViewModel
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun DeviceDetailRoot(
     onNavigateBack: () -> Unit,
-    viewModel: DeviceDetailViewModel
+    viewModel: DeviceDetailViewModel = koinViewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->

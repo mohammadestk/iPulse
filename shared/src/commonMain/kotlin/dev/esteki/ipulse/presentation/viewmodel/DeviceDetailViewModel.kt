@@ -29,6 +29,8 @@ class DeviceDetailViewModel(
     val events = _events.receiveAsFlow()
 
     init {
+        println("device detail viewmodel initialized")
+
         loadDevice()
         collectConnectionEvents()
         collectSignalQuality()
@@ -90,5 +92,9 @@ class DeviceDetailViewModel(
                 _state.update { it.copy(signalQuality = quality.toSignalQualityUi()) }
             }
         }
+    }
+
+    override fun onCleared() {
+        println("device detail viewmodel cleared")
     }
 }

@@ -2,37 +2,72 @@ package dev.esteki.ipulse.presentation.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionStateUi
 import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
-import dev.esteki.ipulse.presentation.theme.*
+import dev.esteki.ipulse.presentation.theme.Background
+import dev.esteki.ipulse.presentation.theme.BodySmallStyle
+import dev.esteki.ipulse.presentation.theme.Border
+import dev.esteki.ipulse.presentation.theme.BorderSoft
+import dev.esteki.ipulse.presentation.theme.CaptionStyle
+import dev.esteki.ipulse.presentation.theme.DataSmallStyle
+import dev.esteki.ipulse.presentation.theme.FaultRed
+import dev.esteki.ipulse.presentation.theme.FaultRedDim
+import dev.esteki.ipulse.presentation.theme.MonoMicroStyle
+import dev.esteki.ipulse.presentation.theme.Panel
+import dev.esteki.ipulse.presentation.theme.PanelInset
+import dev.esteki.ipulse.presentation.theme.SignalAmber
+import dev.esteki.ipulse.presentation.theme.SignalAmberDim
+import dev.esteki.ipulse.presentation.theme.SignalCyan
+import dev.esteki.ipulse.presentation.theme.SignalCyanDim
+import dev.esteki.ipulse.presentation.theme.SubtitleStyle
+import dev.esteki.ipulse.presentation.theme.TextDim
+import dev.esteki.ipulse.presentation.theme.TextMuted
+import dev.esteki.ipulse.presentation.theme.TextPrimary
+import dev.esteki.ipulse.presentation.theme.TitleStyle
 import dev.esteki.ipulse.presentation.viewmodel.DashboardViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun DashboardRoot(
     onNavigateToDeviceDetail: (String) -> Unit,
-    viewModel: DashboardViewModel
+    viewModel: DashboardViewModel = koinViewModel()
 ) {
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is DashboardEvent.NavigateToDeviceDetail -> onNavigateToDeviceDetail(event.deviceId)
-                is DashboardEvent.ShowError -> { /* Handle error */ }
+                is DashboardEvent.ShowError -> { /* Handle error */
+                }
             }
         }
     }
@@ -112,7 +147,7 @@ fun DashboardScreen(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(state.filteredDevices) { device ->
+                items(state.filteredDevices, key = { it.id }) { device ->
                     DeviceRow(
                         device = device,
                         onClick = { onAction(DashboardAction.OnDeviceClick(device.id)) }
@@ -161,6 +196,7 @@ fun ConnectionChip(
         ConnectionState.CONNECTED -> SignalCyan to SignalCyanDim
         ConnectionState.CONNECTING,
         ConnectionState.RECONNECTING -> SignalAmber to SignalAmberDim
+
         ConnectionState.ERROR -> FaultRed to FaultRedDim
         ConnectionState.DISCONNECTED -> TextDim to Border
     }
