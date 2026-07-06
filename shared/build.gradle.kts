@@ -1,6 +1,5 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.internal.types.error.ErrorModuleDescriptor.platform
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -8,6 +7,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 kotlin {
@@ -38,7 +39,7 @@ kotlin {
         minSdk = libs.versions.android.minSdk.get().toInt()
 
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_11
+            jvmTarget = JvmTarget.JVM_17
         }
         androidResources {
             enable = true
@@ -51,6 +52,7 @@ kotlin {
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
+            implementation(libs.androidx.sqlite.bundled)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -70,6 +72,16 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.navigation3.ui)
+            implementation(libs.androidx.room.runtime)
+        }
+        jvmMain.dependencies {
+            implementation(libs.androidx.sqlite.bundled)
+        }
+        iosMain.dependencies {
+            implementation(libs.androidx.sqlite.bundled)
+        }
+        webMain.dependencies {
+            implementation(libs.androidx.sqlite.web)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -82,4 +94,14 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspJvm", libs.androidx.room.compiler)
+    add("kspJs", libs.androidx.room.compiler)
+    add("kspWasmJs", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+}
+
+room3 {
+    schemaDirectory(layout.projectDirectory.dir("schemas"))
 }

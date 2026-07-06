@@ -1,5 +1,6 @@
 package dev.esteki.ipulse.data.di
 
+import dev.esteki.ipulse.data.local.createDatabase
 import dev.esteki.ipulse.data.remote.KempMqttClient
 import dev.esteki.ipulse.data.remote.MqttClientAdapter
 import dev.esteki.ipulse.data.repository.BrokerConnectionImpl
@@ -10,6 +11,10 @@ import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
 val dataModule = module {
+    single { createDatabase() }
+    single { get<dev.esteki.ipulse.data.local.AppDatabase>().deviceDao() }
+    single { get<dev.esteki.ipulse.data.local.AppDatabase>().telemetryReadingDao() }
+
     single<Json> {
         Json {
             ignoreUnknownKeys = true
@@ -26,6 +31,11 @@ val dataModule = module {
     }
 
     single<DeviceRepository> {
-        DeviceRepositoryImpl(mqttClient = get(), json = get())
+        DeviceRepositoryImpl(
+            mqttClient = get(),
+            deviceDao = get(),
+            readingDao = get(),
+            json = get()
+        )
     }
 }

@@ -1,9 +1,13 @@
 package dev.esteki.ipulse.data.repository
 
+import dev.esteki.ipulse.data.local.dao.DeviceDao
+import dev.esteki.ipulse.data.local.dao.TelemetryReadingDao
+import dev.esteki.ipulse.data.local.entity.DeviceEntity
+import dev.esteki.ipulse.data.local.entity.TelemetryReadingEntity
+import dev.esteki.ipulse.data.local.mapper.toDomain
 import dev.esteki.ipulse.data.model.TelemetryPayload
 import dev.esteki.ipulse.data.remote.MqttClientAdapter
 import dev.esteki.ipulse.domain.model.*
-import dev.esteki.ipulse.domain.repository.BrokerMessage
 import dev.esteki.ipulse.domain.repository.DeviceRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,27 +16,27 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 class DeviceRepositoryImpl(
     private val mqttClient: MqttClientAdapter,
+    private val deviceDao: DeviceDao,
+    private val readingDao: TelemetryReadingDao,
     private val json: Json = Json { ignoreUnknownKeys = true }
 ) : DeviceRepository {
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private val _devices = MutableStateFlow<Map<String, Device>>(emptyMap())
-    override val devices: Flow<List<Device>> = _devices.map { it.values.toList() }
 
     private val _signalQuality = MutableStateFlow(
         SignalQuality(averageLatencyMs = 0.0, stability = Stability.NO_DATA)
     )
     override val signalQuality: Flow<SignalQuality> = _signalQuality.asStateFlow()
 
-    private val readings = mutableMapOf<String, MutableList<TelemetryReading>>()
+    override val devices: Flow<List<Device>> = deviceDao.observeAll().map { entities ->
+        entities.map { it.toDomain() }
+    }
 
     init {
         observeMqttMessages()
@@ -49,39 +53,51 @@ class DeviceRepositoryImpl(
     private fun processMessage(topic: String, payload: String, timestamp: Long) {
         val sensorType = SensorType.fromTopic(topic) ?: return
         val deviceId = extractDeviceId(topic)
-        val instant = Instant.fromEpochMilliseconds(timestamp)
+        val readingValue = parsePayload(payload)
 
-        val reading = TelemetryReading(
-            value = parsePayload(payload),
-            sensorType = sensorType,
-            timestamp = instant,
-            topic = topic
-        )
+        scope.launch {
+            val existingDevice = deviceDao.getById(deviceId)
 
-        readings.getOrPut(deviceId) { mutableListOf() }.add(reading)
+            val deviceEntity = if (existingDevice != null) {
+                existingDevice.copy(
+                    latestReadingValue = readingValue,
+                    latestReadingTimestamp = timestamp,
+                    latestReadingTopic = topic
+                )
+            } else {
+                DeviceEntity(
+                    id = deviceId,
+                    name = formatDeviceName(deviceId),
+                    topic = topic,
+                    sensorType = sensorType.name,
+                    latestReadingValue = readingValue,
+                    latestReadingTimestamp = timestamp,
+                    latestReadingTopic = topic
+                )
+            }
 
-        _devices.update { current ->
-            val device = current[deviceId] ?: Device(
-                id = deviceId,
-                name = formatDeviceName(deviceId),
-                topic = topic,
-                sensorType = sensorType
+            deviceDao.upsert(deviceEntity)
+
+            readingDao.insert(
+                TelemetryReadingEntity(
+                    deviceId = deviceId,
+                    value = readingValue,
+                    sensorType = sensorType.name,
+                    timestamp = timestamp,
+                    topic = topic
+                )
             )
-            current + (deviceId to device.copy(
-                latestReading = reading,
-                connectionState = ConnectionState.CONNECTED
-            ))
-        }
 
-        updateSignalQuality()
+            updateSignalQuality()
+        }
     }
 
     override suspend fun getDeviceById(id: String): Device? {
-        return _devices.value[id]
+        return deviceDao.getById(id)?.toDomain()
     }
 
     override suspend fun getReadingsForDevice(deviceId: String): List<TelemetryReading> {
-        return readings[deviceId]?.toList() ?: emptyList()
+        return readingDao.getByDeviceId(deviceId).map { it.toDomain() }
     }
 
     private fun parsePayload(payload: String): Double {
@@ -103,32 +119,33 @@ class DeviceRepositoryImpl(
         }
     }
 
-    private fun updateSignalQuality() {
-        val allReadings = readings.values.flatten()
-        if (allReadings.isEmpty()) {
+    private suspend fun updateSignalQuality() {
+        val entities = deviceDao.getAll()
+        if (entities.isEmpty()) {
             _signalQuality.value = SignalQuality(0.0, Stability.NO_DATA)
             return
         }
 
-        val recentReadings = allReadings.filter {
-            it.timestamp.toEpochMilliseconds() > Clock.System.now().toEpochMilliseconds() - 60000
-        }
-
-        if (recentReadings.isEmpty()) {
-            _signalQuality.value = SignalQuality(0.0, Stability.NO_DATA)
-            return
+        val now = Clock.System.now().toEpochMilliseconds()
+        val recentCount = entities.count { device ->
+            val timestamp = device.latestReadingTimestamp ?: 0
+            timestamp > now - 60000
         }
 
         val stability = when {
-            recentReadings.size > 10 -> Stability.STABLE
-            recentReadings.size > 3 -> Stability.JITTERY
+            recentCount > 10 -> Stability.STABLE
+            recentCount > 3 -> Stability.JITTERY
             else -> Stability.NO_DATA
         }
+
+        val lastTimestamp = entities
+            .mapNotNull { it.latestReadingTimestamp }
+            .maxByOrNull { it } ?: 0L
 
         _signalQuality.value = SignalQuality(
             averageLatencyMs = 40.0,
             stability = stability,
-            lastReceivedAt = recentReadings.lastOrNull()?.timestamp
+            lastReceivedAt = if (lastTimestamp > 0) kotlin.time.Instant.fromEpochMilliseconds(lastTimestamp) else null
         )
     }
 }
