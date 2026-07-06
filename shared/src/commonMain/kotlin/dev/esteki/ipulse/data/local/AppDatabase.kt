@@ -20,7 +20,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun telemetryReadingDao(): TelemetryReadingDao
 }
 
-@Suppress("KotlinNoActualForExpected", "EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+@Suppress("KotlinNoActualForExpected")
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
