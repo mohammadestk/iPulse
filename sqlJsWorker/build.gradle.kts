@@ -24,7 +24,7 @@ kotlin {
             )
         }
         wasmJsMain.dependencies {
-            implementation(libs.wrappers.browser)
+            implementation(libs.kotlinx.browser)
         }
     }
 }

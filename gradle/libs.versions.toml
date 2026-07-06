@@ -70,6 +70,7 @@ mqtt-client-core = { module = "org.meshtastic:mqtt-client-core", version.ref = "
 mqtt-client-transport-ws = { module = "org.meshtastic:mqtt-client-transport-ws", version.ref = "mqttClientBom" }
 mqtt-client-transport-tcp = { module = "org.meshtastic:mqtt-client-transport-tcp", version.ref = "mqttClientBom" }
 wrappers-browser = { module = "org.jetbrains.kotlin-wrappers:kotlin-browser", version.ref = "kotlin-wrappers" }
+kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version = "0.5.0" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
