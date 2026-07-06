@@ -1,5 +1,3 @@
-// Ported from https://github.com/danysantiago/room-web-demo (Apache License 2.0)
-// WebWorkerSQLiteDriver messaging protocol: open / prepare / step / close
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm';
 
 let sqlite3 = null;
