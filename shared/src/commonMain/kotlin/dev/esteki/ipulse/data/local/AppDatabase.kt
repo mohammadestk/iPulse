@@ -12,7 +12,7 @@ import dev.esteki.ipulse.data.local.entity.TelemetryReadingEntity
 @Database(
     entities = [DeviceEntity::class, TelemetryReadingEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -24,3 +24,5 @@ abstract class AppDatabase : RoomDatabase() {
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
+
+expect fun databaseBuilder(): RoomDatabase.Builder<AppDatabase>
