@@ -39,7 +39,7 @@ kotlin {
         minSdk = libs.versions.android.minSdk.get().toInt()
 
         compilerOptions {
-            jvmTarget = JvmTarget.JVM_17
+            jvmTarget = JvmTarget.JVM_11
         }
         androidResources {
             enable = true
@@ -82,6 +82,8 @@ kotlin {
         }
         webMain.dependencies {
             implementation(libs.androidx.sqlite.web)
+            implementation(project((":sqliteWasmWorker")))
+            implementation(project((":sqlJsWorker")))
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
