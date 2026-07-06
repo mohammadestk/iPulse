@@ -13,11 +13,3 @@ interface MqttClientAdapter {
     suspend fun unsubscribe(topicFilter: String)
     suspend fun publish(topic: String, payload: String, qos: Int = 1)
 }
-
-enum class MqttConnectionState {
-    CONNECTED,
-    CONNECTING,
-    RECONNECTING,
-    DISCONNECTED,
-    ERROR
-}

@@ -7,9 +7,3 @@ data class SignalQuality(
     val stability: Stability,
     val lastReceivedAt: Instant? = null
 )
-
-enum class Stability {
-    STABLE,
-    JITTERY,
-    NO_DATA
-}

@@ -125,6 +125,7 @@ Rules:
 
 ## Conventions
 
+- **One declaration per file.** Each file contains exactly one class, interface, object, or enum. Name the file after the declaration.
 - **New shared code** goes in `shared/src/commonMain/kotlin/dev/esteki/ipulse/`
 - **Platform-specific** code goes in the corresponding `*Main` source set
 - **iOS entry**: `MainViewController()` wraps `App()` composable

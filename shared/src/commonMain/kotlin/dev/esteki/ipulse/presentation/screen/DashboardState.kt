@@ -25,13 +25,3 @@ data class DashboardState(
                     it.topic.contains(searchQuery, ignoreCase = true)
         }
 }
-
-sealed interface DashboardAction {
-    data class OnSearchQueryChange(val query: String) : DashboardAction
-    data class OnDeviceClick(val deviceId: String) : DashboardAction
-}
-
-sealed interface DashboardEvent {
-    data class NavigateToDeviceDetail(val deviceId: String) : DashboardEvent
-    data class ShowError(val message: String) : DashboardEvent
-}

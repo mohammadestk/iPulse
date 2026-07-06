@@ -4,7 +4,6 @@ import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.presentation.model.ConnectionEventUi
 import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
-import kotlin.time.Instant
 
 data class DeviceDetailState(
     val device: DeviceUi? = null,
@@ -17,19 +16,3 @@ data class DeviceDetailState(
     val readings: List<ReadingUi> = emptyList(),
     val isLoading: Boolean = false
 )
-
-data class ReadingUi(
-    val value: Double,
-    val timestamp: Instant,
-    val formattedTime: String
-)
-
-sealed interface DeviceDetailAction {
-    data object OnBackClick : DeviceDetailAction
-    data object OnRefreshClick : DeviceDetailAction
-}
-
-sealed interface DeviceDetailEvent {
-    data object NavigateBack : DeviceDetailEvent
-    data class ShowError(val message: String) : DeviceDetailEvent
-}
