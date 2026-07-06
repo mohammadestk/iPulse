@@ -12,7 +12,10 @@ import dev.esteki.ipulse.presentation.screen.DeviceDetailAction
 import dev.esteki.ipulse.presentation.screen.DeviceDetailEvent
 import dev.esteki.ipulse.presentation.screen.DeviceDetailState
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class DeviceDetailViewModel(
@@ -43,6 +46,7 @@ class DeviceDetailViewModel(
                     _events.send(DeviceDetailEvent.NavigateBack)
                 }
             }
+
             is DeviceDetailAction.OnRefreshClick -> loadDevice()
         }
     }
@@ -79,7 +83,8 @@ class DeviceDetailViewModel(
         viewModelScope.launch {
             observeConnectionEvents().collect { event ->
                 _state.update { state ->
-                    val events = (listOf(event.toConnectionEventUi()) + state.connectionEvents).take(50)
+                    val events =
+                        (listOf(event.toConnectionEventUi()) + state.connectionEvents).take(50)
                     state.copy(connectionEvents = events)
                 }
             }
