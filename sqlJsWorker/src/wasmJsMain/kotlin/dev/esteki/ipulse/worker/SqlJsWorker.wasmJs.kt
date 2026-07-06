@@ -1,9 +1,9 @@
-package org.dany.worker
+package dev.esteki.ipulse.worker
 
 import androidx.sqlite.driver.web.WebWorkerSQLiteDriver
 import org.w3c.dom.Worker
 
-actual fun createSqlJsWorker() = WebWorkerSQLiteDriver(jsWorker())
+actual fun createSqlJsWorker() = WebWorkerSQLiteDriver(_root_ide_package_.esteki.dany.worker.jsWorker())
 
 @OptIn(ExperimentalWasmJsInterop::class)
 private fun jsWorker(): Worker =

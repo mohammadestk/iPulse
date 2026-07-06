@@ -1,4 +1,4 @@
-package org.dany.worker
+package dev.esteki.ipulse.worker
 
 import androidx.sqlite.driver.web.WebWorkerSQLiteDriver
 

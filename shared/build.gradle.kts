@@ -82,8 +82,8 @@ kotlin {
         }
         webMain.dependencies {
             implementation(libs.androidx.sqlite.web)
-            implementation(project((":sqliteWasmWorker")))
-            implementation(project((":sqlJsWorker")))
+            implementation(projects.sqliteWasmWorker)
+            implementation(projects.sqlJsWorker)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
