@@ -9,6 +9,6 @@ interface DeviceRepository {
     val devices: Flow<List<Device>>
     val signalQuality: Flow<SignalQuality>
 
-    suspend fun getDeviceById(id: String): Device?
-    suspend fun getReadingsForDevice(deviceId: String): List<TelemetryReading>
+    suspend fun getDeviceById(id: String): Result<Device>
+    suspend fun getReadingsForDevice(deviceId: String): Result<List<TelemetryReading>>
 }

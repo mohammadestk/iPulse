@@ -24,7 +24,7 @@ fun DeviceEntity.toDomain(): Device {
         topic = topic,
         sensorType = sensorType,
         latestReading = latestReading,
-        connectionState = ConnectionState.DISCONNECTED
+        connectionState = ConnectionState.Disconnected
     )
 }
 

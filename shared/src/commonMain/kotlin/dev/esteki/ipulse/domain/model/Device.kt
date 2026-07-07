@@ -6,5 +6,5 @@ data class Device(
     val topic: String,
     val sensorType: SensorType,
     val latestReading: TelemetryReading? = null,
-    val connectionState: ConnectionState = ConnectionState.DISCONNECTED
+    val connectionState: ConnectionState = ConnectionState.Disconnected
 )

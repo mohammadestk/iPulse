@@ -6,7 +6,7 @@ import dev.esteki.ipulse.domain.repository.DeviceRepository
 class GetDeviceById(
     private val deviceRepository: DeviceRepository
 ) {
-    suspend operator fun invoke(deviceId: String): Device? {
+    suspend operator fun invoke(deviceId: String): Result<Device> {
         return deviceRepository.getDeviceById(deviceId)
     }
 }

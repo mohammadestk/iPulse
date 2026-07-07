@@ -30,8 +30,6 @@ class DashboardViewModel(
     val events = _events.receiveAsFlow()
 
     init {
-        println("home viewmodel initialized")
-
         collectConnectionState()
         collectTelemetryDevices()
         collectConnectionEvents()
@@ -41,12 +39,12 @@ class DashboardViewModel(
 
     private fun autoConnect() {
         viewModelScope.launch {
-            try {
-                connectToBroker("test.mosquitto.org", 8081)
-                subscribeToDeviceTopic("#")
-            } catch (_: Exception) {
-                // Connection state will be updated via collectConnectionState
-            }
+            connectToBroker("test.mosquitto.org", 8081)
+                .onSuccess { subscribeToDeviceTopic("#") }
+                .onFailure { error ->
+                    _state.update { it.copy(errorMessage = error.message ?: "Connection failed") }
+                    _events.send(DashboardEvent.ShowError(error.message ?: "Connection failed"))
+                }
         }
     }
 
@@ -60,42 +58,49 @@ class DashboardViewModel(
                     _events.send(DashboardEvent.NavigateToDeviceDetail(action.deviceId))
                 }
             }
+            is DashboardAction.OnErrorDismissed -> {
+                _state.update { it.copy(errorMessage = null) }
+            }
         }
     }
 
     private fun collectConnectionState() {
-        viewModelScope.launch {
-            observeConnectionState().collect { connectionState ->
+        observeConnectionState()
+            .onEach { connectionState ->
                 _state.update { it.copy(connectionState = connectionState.toConnectionStateUi()) }
             }
-        }
+            .catch { _state.update { it.copy(errorMessage = "Connection state monitor failed") } }
+            .launchIn(viewModelScope)
     }
 
     private fun collectTelemetryDevices() {
-        viewModelScope.launch {
-            observeTelemetry().collect { devices ->
+        observeTelemetry()
+            .onEach { devices ->
                 _state.update { it.copy(devices = devices.map { device -> device.toDeviceUi() }) }
             }
-        }
+            .catch { _state.update { it.copy(errorMessage = "Device list monitor failed") } }
+            .launchIn(viewModelScope)
     }
 
     private fun collectConnectionEvents() {
-        viewModelScope.launch {
-            observeConnectionEvents().collect { event ->
+        observeConnectionEvents()
+            .onEach { event ->
                 _state.update { state ->
                     val events = (listOf(event.toConnectionEventUi()) + state.connectionEvents).take(50)
                     state.copy(connectionEvents = events)
                 }
             }
-        }
+            .catch { /* Connection events monitor failed */ }
+            .launchIn(viewModelScope)
     }
 
     private fun collectSignalQuality() {
-        viewModelScope.launch {
-            observeSignalQuality().collect { quality ->
+        observeSignalQuality()
+            .onEach { quality ->
                 _state.update { it.copy(signalQuality = quality.toSignalQualityUi()) }
             }
-        }
+            .catch { /* Signal quality monitor failed */ }
+            .launchIn(viewModelScope)
     }
 
     override fun onCleared() {

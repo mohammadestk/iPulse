@@ -44,8 +44,20 @@ class DeviceRepositoryImpl(
 
     private fun observeMqttMessages() {
         scope.launch {
-            mqttClient.messages.collect { message ->
-                processMessage(message.topic, message.payload, Clock.System.now().toEpochMilliseconds())
+            try {
+                mqttClient.messages.collect { message ->
+                    try {
+                        processMessage(
+                            topic = message.topic,
+                            payload = message.payload,
+                            timestamp = Clock.System.now().toEpochMilliseconds()
+                        )
+                    } catch (_: Exception) {
+                        // Skip malformed messages; continue processing
+                    }
+                }
+            } catch (_: Exception) {
+                // Message flow ended; telemetry collection stopped
             }
         }
     }
@@ -56,48 +68,66 @@ class DeviceRepositoryImpl(
         val readingValue = parsePayload(payload)
 
         scope.launch {
-            val existingDevice = deviceDao.getById(deviceId)
+            try {
+                val existingDevice = deviceDao.getById(deviceId)
 
-            val deviceEntity = if (existingDevice != null) {
-                existingDevice.copy(
-                    latestReadingValue = readingValue,
-                    latestReadingTimestamp = timestamp,
-                    latestReadingTopic = topic
+                val deviceEntity = if (existingDevice != null) {
+                    existingDevice.copy(
+                        latestReadingValue = readingValue,
+                        latestReadingTimestamp = timestamp,
+                        latestReadingTopic = topic
+                    )
+                } else {
+                    DeviceEntity(
+                        id = deviceId,
+                        name = formatDeviceName(deviceId),
+                        topic = topic,
+                        sensorType = sensorType.name,
+                        latestReadingValue = readingValue,
+                        latestReadingTimestamp = timestamp,
+                        latestReadingTopic = topic
+                    )
+                }
+
+                deviceDao.upsert(deviceEntity)
+
+                readingDao.insert(
+                    TelemetryReadingEntity(
+                        deviceId = deviceId,
+                        value = readingValue,
+                        sensorType = sensorType.name,
+                        timestamp = timestamp,
+                        topic = topic
+                    )
                 )
-            } else {
-                DeviceEntity(
-                    id = deviceId,
-                    name = formatDeviceName(deviceId),
-                    topic = topic,
-                    sensorType = sensorType.name,
-                    latestReadingValue = readingValue,
-                    latestReadingTimestamp = timestamp,
-                    latestReadingTopic = topic
-                )
+
+                updateSignalQuality()
+            } catch (_: Exception) {
+                // DB operation failed for this message; skip
             }
-
-            deviceDao.upsert(deviceEntity)
-
-            readingDao.insert(
-                TelemetryReadingEntity(
-                    deviceId = deviceId,
-                    value = readingValue,
-                    sensorType = sensorType.name,
-                    timestamp = timestamp,
-                    topic = topic
-                )
-            )
-
-            updateSignalQuality()
         }
     }
 
-    override suspend fun getDeviceById(id: String): Device? {
-        return deviceDao.getById(id)?.toDomain()
+    override suspend fun getDeviceById(id: String): Result<Device> {
+        return try {
+            val entity = deviceDao.getById(id)
+            if (entity != null) {
+                Result.success(entity.toDomain())
+            } else {
+                Result.failure(DomainError.DeviceNotFound(id))
+            }
+        } catch (e: Exception) {
+            Result.failure(DomainError.Unknown(e))
+        }
     }
 
-    override suspend fun getReadingsForDevice(deviceId: String): List<TelemetryReading> {
-        return readingDao.getByDeviceId(deviceId).map { it.toDomain() }
+    override suspend fun getReadingsForDevice(deviceId: String): Result<List<TelemetryReading>> {
+        return try {
+            val readings = readingDao.getByDeviceId(deviceId).map { it.toDomain() }
+            Result.success(readings)
+        } catch (e: Exception) {
+            Result.failure(DomainError.Unknown(e))
+        }
     }
 
     private fun parsePayload(payload: String): Double {
@@ -120,32 +150,36 @@ class DeviceRepositoryImpl(
     }
 
     private suspend fun updateSignalQuality() {
-        val entities = deviceDao.getAll()
-        if (entities.isEmpty()) {
-            _signalQuality.value = SignalQuality(0.0, Stability.NO_DATA)
-            return
+        try {
+            val entities = deviceDao.getAll()
+            if (entities.isEmpty()) {
+                _signalQuality.value = SignalQuality(0.0, Stability.NO_DATA)
+                return
+            }
+
+            val now = Clock.System.now().toEpochMilliseconds()
+            val recentCount = entities.count { device ->
+                val timestamp = device.latestReadingTimestamp ?: 0
+                timestamp > now - 60000
+            }
+
+            val stability = when {
+                recentCount > 10 -> Stability.STABLE
+                recentCount > 3 -> Stability.JITTERY
+                else -> Stability.NO_DATA
+            }
+
+            val lastTimestamp = entities
+                .mapNotNull { it.latestReadingTimestamp }
+                .maxByOrNull { it } ?: 0L
+
+            _signalQuality.value = SignalQuality(
+                averageLatencyMs = 40.0,
+                stability = stability,
+                lastReceivedAt = if (lastTimestamp > 0) kotlin.time.Instant.fromEpochMilliseconds(lastTimestamp) else null
+            )
+        } catch (_: Exception) {
+            // Signal quality update failed; keep previous value
         }
-
-        val now = Clock.System.now().toEpochMilliseconds()
-        val recentCount = entities.count { device ->
-            val timestamp = device.latestReadingTimestamp ?: 0
-            timestamp > now - 60000
-        }
-
-        val stability = when {
-            recentCount > 10 -> Stability.STABLE
-            recentCount > 3 -> Stability.JITTERY
-            else -> Stability.NO_DATA
-        }
-
-        val lastTimestamp = entities
-            .mapNotNull { it.latestReadingTimestamp }
-            .maxByOrNull { it } ?: 0L
-
-        _signalQuality.value = SignalQuality(
-            averageLatencyMs = 40.0,
-            stability = stability,
-            lastReceivedAt = if (lastTimestamp > 0) kotlin.time.Instant.fromEpochMilliseconds(lastTimestamp) else null
-        )
     }
 }

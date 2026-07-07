@@ -11,5 +11,5 @@ data class ConnectionStateUi(
 fun ConnectionState.toConnectionStateUi(): ConnectionStateUi = ConnectionStateUi(
     state = this,
     displayName = displayName,
-    isConnected = this == ConnectionState.CONNECTED
+    isConnected = this is ConnectionState.Connected
 )

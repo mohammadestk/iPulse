@@ -9,14 +9,15 @@ import dev.esteki.ipulse.presentation.model.SignalQualityUi
 data class DashboardState(
     val devices: List<DeviceUi> = emptyList(),
     val connectionState: ConnectionStateUi = ConnectionStateUi(
-        state = ConnectionState.DISCONNECTED,
+        state = ConnectionState.Disconnected,
         displayName = "Disconnected",
         isConnected = false
     ),
     val signalQuality: SignalQualityUi? = null,
     val connectionEvents: List<ConnectionEventUi> = emptyList(),
     val isLoading: Boolean = false,
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val errorMessage: String? = null
 ) {
     val filteredDevices: List<DeviceUi>
         get() = if (searchQuery.isBlank()) devices

@@ -23,7 +23,7 @@ fun Device.toDeviceUi(): DeviceUi = DeviceUi(
     latestValue = latestReading?.value?.format(1) ?: "--",
     unit = sensorType.unit,
     connectionState = connectionState,
-    isLive = connectionState == ConnectionState.CONNECTED
+    isLive = connectionState is ConnectionState.Connected
 )
 
 private fun Double.format(decimals: Int): String {

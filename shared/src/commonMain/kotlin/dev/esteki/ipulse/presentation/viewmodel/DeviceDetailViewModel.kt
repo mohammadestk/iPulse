@@ -12,10 +12,7 @@ import dev.esteki.ipulse.presentation.screen.DeviceDetailAction
 import dev.esteki.ipulse.presentation.screen.DeviceDetailEvent
 import dev.esteki.ipulse.presentation.screen.DeviceDetailState
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class DeviceDetailViewModel(
@@ -32,8 +29,6 @@ class DeviceDetailViewModel(
     val events = _events.receiveAsFlow()
 
     init {
-        println("device detail viewmodel initialized")
-
         loadDevice()
         collectConnectionEvents()
         collectSignalQuality()
@@ -46,17 +41,21 @@ class DeviceDetailViewModel(
                     _events.send(DeviceDetailEvent.NavigateBack)
                 }
             }
-
-            is DeviceDetailAction.OnRefreshClick -> loadDevice()
+            is DeviceDetailAction.OnRefreshClick -> {
+                _state.update { it.copy(errorMessage = null) }
+                loadDevice()
+            }
+            is DeviceDetailAction.OnErrorDismissed -> {
+                _state.update { it.copy(errorMessage = null) }
+            }
         }
     }
 
     private fun loadDevice() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            try {
-                val device = getDeviceById(deviceId)
-                if (device != null) {
+            getDeviceById(deviceId)
+                .onSuccess { device ->
                     val deviceUi = device.toDeviceUi()
                     _state.update {
                         it.copy(
@@ -68,35 +67,39 @@ class DeviceDetailViewModel(
                             isLoading = false
                         )
                     }
-                } else {
-                    _state.update { it.copy(isLoading = false) }
-                    _events.send(DeviceDetailEvent.ShowError("Device not found"))
                 }
-            } catch (e: Exception) {
-                _state.update { it.copy(isLoading = false) }
-                _events.send(DeviceDetailEvent.ShowError(e.message ?: "Failed to load device"))
-            }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.message ?: "Failed to load device"
+                        )
+                    }
+                    _events.send(DeviceDetailEvent.ShowError(error.message ?: "Failed to load device"))
+                }
         }
     }
 
     private fun collectConnectionEvents() {
-        viewModelScope.launch {
-            observeConnectionEvents().collect { event ->
+        observeConnectionEvents()
+            .onEach { event ->
                 _state.update { state ->
                     val events =
                         (listOf(event.toConnectionEventUi()) + state.connectionEvents).take(50)
                     state.copy(connectionEvents = events)
                 }
             }
-        }
+            .catch { /* Connection events monitor failed */ }
+            .launchIn(viewModelScope)
     }
 
     private fun collectSignalQuality() {
-        viewModelScope.launch {
-            observeSignalQuality().collect { quality ->
+        observeSignalQuality()
+            .onEach { quality ->
                 _state.update { it.copy(signalQuality = quality.toSignalQualityUi()) }
             }
-        }
+            .catch { /* Signal quality monitor failed */ }
+            .launchIn(viewModelScope)
     }
 
     override fun onCleared() {

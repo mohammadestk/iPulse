@@ -25,18 +25,20 @@ fun DeviceDetailRoot(
     viewModel: DeviceDetailViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is DeviceDetailEvent.NavigateBack -> onNavigateBack()
-                is DeviceDetailEvent.ShowError -> { /* Handle error */ }
+                is DeviceDetailEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
 
     DeviceDetailScreen(
         state = state,
+        snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction
     )
 }
@@ -44,82 +46,88 @@ fun DeviceDetailRoot(
 @Composable
 fun DeviceDetailScreen(
     state: DeviceDetailState,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onAction: (DeviceDetailAction) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(IPulseTheme.colors.background)
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        containerColor = IPulseTheme.colors.background
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
         ) {
-            TextButton(onClick = { onAction(DeviceDetailAction.OnBackClick) }) {
-                Text(
-                    text = "< Back",
-                    style = IPulseTheme.typography.buttonLabel,
-                    color = IPulseTheme.colors.textMuted
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = { onAction(DeviceDetailAction.OnBackClick) }) {
+                    Text(
+                        text = "< Back",
+                        style = IPulseTheme.typography.buttonLabel,
+                        color = IPulseTheme.colors.textMuted
+                    )
+                }
+                TextButton(onClick = { onAction(DeviceDetailAction.OnRefreshClick) }) {
+                    Text(
+                        text = "Refresh",
+                        style = IPulseTheme.typography.buttonLabel,
+                        color = IPulseTheme.colors.textMuted
+                    )
+                }
             }
-            TextButton(onClick = { onAction(DeviceDetailAction.OnRefreshClick) }) {
-                Text(
-                    text = "Refresh",
-                    style = IPulseTheme.typography.buttonLabel,
-                    color = IPulseTheme.colors.textMuted
-                )
-            }
-        }
 
-        Text(
-            text = state.device?.name ?: "Unknown Device",
-            style = IPulseTheme.typography.title,
-            color = IPulseTheme.colors.textPrimary
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = state.device?.topic ?: "",
-            style = IPulseTheme.typography.monoMicro,
-            color = IPulseTheme.colors.textDim
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        ReadoutPanel(
-            latestValue = state.latestValue,
-            unit = state.unit,
-            sensorType = state.sensorType,
-            connectionState = state.connectionState,
-            signalQuality = state.signalQuality
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(
-            text = "Connection log",
-            style = IPulseTheme.typography.dataSmall,
-            color = IPulseTheme.colors.textPrimary
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (state.connectionEvents.isEmpty()) {
             Text(
-                text = "No connection events yet",
-                style = IPulseTheme.typography.caption,
+                text = state.device?.name ?: "Unknown Device",
+                style = IPulseTheme.typography.title,
+                color = IPulseTheme.colors.textPrimary
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = state.device?.topic ?: "",
+                style = IPulseTheme.typography.monoMicro,
                 color = IPulseTheme.colors.textDim
             )
-        } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                items(state.connectionEvents) { event ->
-                    ConnectionEventRow(event = event)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ReadoutPanel(
+                latestValue = state.latestValue,
+                unit = state.unit,
+                sensorType = state.sensorType,
+                connectionState = state.connectionState,
+                signalQuality = state.signalQuality
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "Connection log",
+                style = IPulseTheme.typography.dataSmall,
+                color = IPulseTheme.colors.textPrimary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (state.connectionEvents.isEmpty()) {
+                Text(
+                    text = "No connection events yet",
+                    style = IPulseTheme.typography.caption,
+                    color = IPulseTheme.colors.textDim
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    items(state.connectionEvents) { event ->
+                        ConnectionEventRow(event = event)
+                    }
                 }
             }
         }
@@ -153,11 +161,11 @@ private fun ReadoutPanel(
             ConnectionChip(
                 state = connectionState,
                 label = when (connectionState) {
-                    ConnectionState.CONNECTED -> "Live"
-                    ConnectionState.RECONNECTING -> "Reconnecting"
-                    ConnectionState.CONNECTING -> "Connecting"
-                    ConnectionState.ERROR -> "Error"
-                    ConnectionState.DISCONNECTED -> "Offline"
+                    is ConnectionState.Connected -> "Live"
+                    is ConnectionState.Reconnecting -> "Reconnecting"
+                    is ConnectionState.Connecting -> "Connecting"
+                    is ConnectionState.Error -> "Error"
+                    is ConnectionState.Disconnected -> "Offline"
                 }
             )
         }
@@ -168,7 +176,7 @@ private fun ReadoutPanel(
             Text(
                 text = latestValue,
                 style = IPulseTheme.typography.dataLarge,
-                color = if (connectionState == ConnectionState.CONNECTED) IPulseTheme.colors.signalCyan else IPulseTheme.colors.textDim
+                color = if (connectionState is ConnectionState.Connected) IPulseTheme.colors.signalCyan else IPulseTheme.colors.textDim
             )
             Text(
                 text = unit,

@@ -6,7 +6,7 @@ import dev.esteki.ipulse.domain.repository.DeviceRepository
 class GetDeviceReadings(
     private val deviceRepository: DeviceRepository
 ) {
-    suspend operator fun invoke(deviceId: String): List<TelemetryReading> {
+    suspend operator fun invoke(deviceId: String): Result<List<TelemetryReading>> {
         return deviceRepository.getReadingsForDevice(deviceId)
     }
 }

@@ -24,7 +24,7 @@ class KempMqttClient : MqttClientAdapter {
     private val _messages = MutableSharedFlow<MqttMessage>(extraBufferCapacity = 64)
     override val messages: SharedFlow<MqttMessage> = _messages.asSharedFlow()
 
-    private val _connectionState = MutableStateFlow(MqttConnectionState.DISCONNECTED)
+    private val _connectionState = MutableStateFlow<MqttConnectionState>(MqttConnectionState.Disconnected)
     override val connectionState: StateFlow<MqttConnectionState> = _connectionState.asStateFlow()
 
     private var client: MqttClient? = null
@@ -32,44 +32,48 @@ class KempMqttClient : MqttClientAdapter {
     private val subscribedTopics = mutableSetOf<String>()
 
     override suspend fun connect(brokerUrl: String, port: Int) {
-        _connectionState.value = MqttConnectionState.CONNECTING
+        _connectionState.value = MqttConnectionState.Connecting
 
         try {
             val wsUrl = "wss://$brokerUrl:$port/mqtt"
-            client = MqttClient(Url(wsUrl)) {
-                // No additional config needed
-            }
+            client = MqttClient(Url(wsUrl)) { }
 
             client?.connect()?.onSuccess { connack ->
                 if (connack.isSuccess) {
-                    _connectionState.value = MqttConnectionState.CONNECTED
+                    _connectionState.value = MqttConnectionState.Connected
                     resubscribeAll()
                     observePublishedPackets()
                 } else {
-                    println(connack.toString())
-                    _connectionState.value = MqttConnectionState.ERROR
+                    val detail = connack.toString()
+                    _connectionState.value = MqttConnectionState.Error("Broker rejected: $detail")
                 }
-            }?.onFailure {
-                it.printStackTrace()
-                _connectionState.value = MqttConnectionState.ERROR
+            }?.onFailure { error ->
+                _connectionState.value = MqttConnectionState.Error(error.message ?: "Connection failed", error)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
-            _connectionState.value = MqttConnectionState.ERROR
+            _connectionState.value = MqttConnectionState.Error("Connection failed: ${e.message}", e)
         }
     }
 
     private fun observePublishedPackets() {
         scope.launch {
-            client?.publishedPackets?.collect { publish ->
-                val topic = publish.topic.name
-                val payload = publish.payload.toByteArray().decodeToString()
-                val qos = when (publish.qoS) {
-                    QoS.AT_MOST_ONCE -> 0
-                    QoS.AT_LEAST_ONCE -> 1
-                    QoS.EXACTLY_ONE -> 2
+            try {
+                client?.publishedPackets?.collect { publish ->
+                    try {
+                        val topic = publish.topic.name
+                        val payload = publish.payload.toByteArray().decodeToString()
+                        val qos = when (publish.qoS) {
+                            QoS.AT_MOST_ONCE -> 0
+                            QoS.AT_LEAST_ONCE -> 1
+                            QoS.EXACTLY_ONE -> 2
+                        }
+                        _messages.emit(MqttMessage(topic = topic, payload = payload, qos = qos))
+                    } catch (_: Exception) {
+                        // Skip malformed publish packet
+                    }
                 }
-                _messages.emit(MqttMessage(topic = topic, payload = payload, qos = qos))
+            } catch (_: Exception) {
+                // publishedPackets flow ended or errored
             }
         }
     }
@@ -81,42 +85,59 @@ class KempMqttClient : MqttClientAdapter {
         }
         client = null
         subscribedTopics.clear()
-        _connectionState.value = MqttConnectionState.DISCONNECTED
+        _connectionState.value = MqttConnectionState.Disconnected
     }
 
     override suspend fun subscribe(topicFilter: String) {
-        subscribedTopics.add(topicFilter)
-        client?.subscribe(listOf(TopicFilter(Topic(topicFilter))))
+        try {
+            subscribedTopics.add(topicFilter)
+            client?.subscribe(listOf(TopicFilter(Topic(topicFilter))))
+        } catch (e: Exception) {
+            _connectionState.value = MqttConnectionState.Error("Subscribe failed: ${e.message}", e)
+        }
     }
 
     override suspend fun unsubscribe(topicFilter: String) {
-        subscribedTopics.remove(topicFilter)
-        client?.unsubscribe(listOf(Topic(topicFilter)))
+        try {
+            subscribedTopics.remove(topicFilter)
+            client?.unsubscribe(listOf(Topic(topicFilter)))
+        } catch (_: Exception) {
+        }
     }
 
     override suspend fun publish(topic: String, payload: String, qos: Int) {
-        val mqttQos = when (qos) {
-            0 -> QoS.AT_MOST_ONCE
-            1 -> QoS.AT_LEAST_ONCE
-            else -> QoS.EXACTLY_ONE
+        try {
+            val mqttQos = when (qos) {
+                0 -> QoS.AT_MOST_ONCE
+                1 -> QoS.AT_LEAST_ONCE
+                else -> QoS.EXACTLY_ONE
+            }
+            client?.publish(PublishRequest(topic) {
+                desiredQoS = mqttQos
+                payload(payload)
+            })
+        } catch (_: Exception) {
         }
-        client?.publish(PublishRequest(topic) {
-            desiredQoS = mqttQos
-            payload(payload)
-        })
     }
 
     private fun resubscribeAll() {
         scope.launch {
-            subscribedTopics.forEach { topic ->
-                client?.subscribe(listOf(TopicFilter(Topic(topic))))
+            subscribedTopics.toList().forEach { topic ->
+                try {
+                    client?.subscribe(listOf(TopicFilter(Topic(topic))))
+                } catch (_: Exception) {
+                    // Skip topics that fail to resubscribe
+                }
             }
         }
     }
 
     fun destroy() {
         scope.launch {
-            client?.disconnect()
+            try {
+                client?.disconnect()
+            } catch (_: Exception) {
+            }
         }
         client = null
     }

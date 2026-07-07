@@ -18,10 +18,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,19 +46,20 @@ fun DashboardRoot(
     viewModel: DashboardViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
                 is DashboardEvent.NavigateToDeviceDetail -> onNavigateToDeviceDetail(event.deviceId)
-                is DashboardEvent.ShowError -> { /* Handle error */
-                }
+                is DashboardEvent.ShowError -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
 
     DashboardScreen(
         state = state,
+        snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction
     )
 }
@@ -62,73 +67,79 @@ fun DashboardRoot(
 @Composable
 fun DashboardScreen(
     state: DashboardState,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onAction: (DashboardAction) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(IPulseTheme.colors.background)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Sensors",
-            style = IPulseTheme.typography.title,
-            color = IPulseTheme.colors.textPrimary
-        )
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        containerColor = IPulseTheme.colors.background
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Sensors",
+                style = IPulseTheme.typography.title,
+                color = IPulseTheme.colors.textPrimary
+            )
 
-        Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-        Text(
-            text = "broker: broker.emqx.io",
-            style = IPulseTheme.typography.monoMicro,
-            color = IPulseTheme.colors.textDim
-        )
+            Text(
+                text = "broker: test.mosquitto.org",
+                style = IPulseTheme.typography.monoMicro,
+                color = IPulseTheme.colors.textDim
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        ConnectionStatusBar(
-            connectionState = state.connectionState,
-            signalQuality = state.signalQuality
-        )
+            ConnectionStatusBar(
+                connectionState = state.connectionState,
+                signalQuality = state.signalQuality
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = state.searchQuery,
-            onValueChange = { onAction(DashboardAction.OnSearchQueryChange(it)) },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = {
-                Text(
-                    text = "filter by topic or name",
-                    style = IPulseTheme.typography.monoMicro,
-                    color = IPulseTheme.colors.textDim
-                )
-            },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = IPulseTheme.colors.border,
-                unfocusedBorderColor = IPulseTheme.colors.borderSoft,
-                focusedContainerColor = IPulseTheme.colors.panelInset,
-                unfocusedContainerColor = IPulseTheme.colors.panelInset
-            ),
-            shape = RoundedCornerShape(4.dp),
-            textStyle = IPulseTheme.typography.monoMicro.copy(color = IPulseTheme.colors.textPrimary),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (state.filteredDevices.isEmpty()) {
-            EmptyState()
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(state.filteredDevices, key = { it.id }) { device ->
-                    DeviceRow(
-                        device = device,
-                        onClick = { onAction(DashboardAction.OnDeviceClick(device.id)) }
+            OutlinedTextField(
+                value = state.searchQuery,
+                onValueChange = { onAction(DashboardAction.OnSearchQueryChange(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        text = "filter by topic or name",
+                        style = IPulseTheme.typography.monoMicro,
+                        color = IPulseTheme.colors.textDim
                     )
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = IPulseTheme.colors.border,
+                    unfocusedBorderColor = IPulseTheme.colors.borderSoft,
+                    focusedContainerColor = IPulseTheme.colors.panelInset,
+                    unfocusedContainerColor = IPulseTheme.colors.panelInset
+                ),
+                shape = RoundedCornerShape(4.dp),
+                textStyle = IPulseTheme.typography.monoMicro.copy(color = IPulseTheme.colors.textPrimary),
+                singleLine = true
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (state.filteredDevices.isEmpty()) {
+                EmptyState()
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(state.filteredDevices, key = { it.id }) { device ->
+                        DeviceRow(
+                            device = device,
+                            onClick = { onAction(DashboardAction.OnDeviceClick(device.id)) }
+                        )
+                    }
                 }
             }
         }
@@ -170,12 +181,11 @@ fun ConnectionChip(
     modifier: Modifier = Modifier
 ) {
     val (color, dimColor) = when (state) {
-        ConnectionState.CONNECTED -> IPulseTheme.colors.signalCyan to IPulseTheme.colors.signalCyanDim
-        ConnectionState.CONNECTING,
-        ConnectionState.RECONNECTING -> IPulseTheme.colors.signalAmber to IPulseTheme.colors.signalAmberDim
-
-        ConnectionState.ERROR -> IPulseTheme.colors.faultRed to IPulseTheme.colors.faultRedDim
-        ConnectionState.DISCONNECTED -> IPulseTheme.colors.textDim to IPulseTheme.colors.border
+        is ConnectionState.Connected -> IPulseTheme.colors.signalCyan to IPulseTheme.colors.signalCyanDim
+        is ConnectionState.Connecting,
+        is ConnectionState.Reconnecting -> IPulseTheme.colors.signalAmber to IPulseTheme.colors.signalAmberDim
+        is ConnectionState.Error -> IPulseTheme.colors.faultRed to IPulseTheme.colors.faultRedDim
+        is ConnectionState.Disconnected -> IPulseTheme.colors.textDim to IPulseTheme.colors.border
     }
 
     Row(
@@ -242,9 +252,9 @@ private fun DeviceRow(
             }
             Spacer(modifier = Modifier.height(4.dp))
             ConnectionChip(
-                state = if (device.connectionState == ConnectionState.CONNECTED)
-                    ConnectionState.CONNECTED
-                else ConnectionState.DISCONNECTED,
+                state = if (device.connectionState is ConnectionState.Connected)
+                    ConnectionState.Connected
+                else ConnectionState.Disconnected,
                 label = if (device.isLive) "live" else "offline"
             )
         }

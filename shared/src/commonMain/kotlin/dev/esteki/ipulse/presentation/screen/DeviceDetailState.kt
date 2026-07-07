@@ -10,9 +10,10 @@ data class DeviceDetailState(
     val latestValue: String = "--",
     val unit: String = "",
     val sensorType: String = "",
-    val connectionState: ConnectionState = ConnectionState.DISCONNECTED,
+    val connectionState: ConnectionState = ConnectionState.Disconnected,
     val signalQuality: SignalQualityUi? = null,
     val connectionEvents: List<ConnectionEventUi> = emptyList(),
     val readings: List<ReadingUi> = emptyList(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )
