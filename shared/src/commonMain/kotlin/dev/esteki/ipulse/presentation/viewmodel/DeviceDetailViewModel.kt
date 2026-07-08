@@ -16,13 +16,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class DeviceDetailViewModel(
+    private val deviceDetailState: DeviceDetailState,
     private val deviceId: String,
     private val observeDeviceById: ObserveDeviceById,
     private val observeConnectionEvents: ObserveConnectionEvents,
     private val observeSignalQuality: ObserveSignalQuality
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(DeviceDetailState())
+    private val _state = MutableStateFlow(deviceDetailState)
     val state = _state.asStateFlow()
 
     private val _events = Channel<DeviceDetailEvent>()

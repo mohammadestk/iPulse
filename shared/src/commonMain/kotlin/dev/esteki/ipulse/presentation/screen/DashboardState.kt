@@ -1,23 +1,20 @@
 package dev.esteki.ipulse.presentation.screen
 
-import dev.esteki.ipulse.domain.model.ConnectionState
+import androidx.compose.runtime.Stable
 import dev.esteki.ipulse.presentation.model.ConnectionEventUi
 import dev.esteki.ipulse.presentation.model.ConnectionStateUi
 import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
 
+@Stable
 data class DashboardState(
-    val devices: List<DeviceUi> = emptyList(),
-    val connectionState: ConnectionStateUi = ConnectionStateUi(
-        state = ConnectionState.Disconnected,
-        displayName = "Disconnected",
-        isConnected = false
-    ),
-    val signalQuality: SignalQualityUi? = null,
-    val connectionEvents: List<ConnectionEventUi> = emptyList(),
-    val isLoading: Boolean = false,
-    val searchQuery: String = "",
-    val errorMessage: String? = null
+    val devices: List<DeviceUi>,
+    val connectionState: ConnectionStateUi,
+    val signalQuality: SignalQualityUi?,
+    val connectionEvents: List<ConnectionEventUi>,
+    val isLoading: Boolean,
+    val searchQuery: String,
+    val errorMessage: String?
 ) {
     val filteredDevices: List<DeviceUi>
         get() = if (searchQuery.isBlank()) devices

@@ -1,14 +1,16 @@
 package dev.esteki.ipulse.presentation.screen
 
+import androidx.compose.runtime.Stable
 import dev.esteki.ipulse.presentation.model.ConnectionEventUi
 import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
 
+@Stable
 data class DeviceDetailState(
-    val device: DeviceUi? = null,
-    val signalQuality: SignalQualityUi? = null,
-    val connectionEvents: List<ConnectionEventUi> = emptyList(),
-    val readings: List<ReadingUi> = emptyList(),
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val device: DeviceUi?,
+    val signalQuality: SignalQualityUi?,
+    val connectionEvents: List<ConnectionEventUi>,
+    val readings: List<ReadingUi>,
+    val isLoading: Boolean,
+    val errorMessage: String?
 )

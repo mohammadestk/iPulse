@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class DashboardViewModel(
+    private val dashboardState: DashboardState,
     private val connectToBroker: ConnectToBroker,
     private val subscribeToDeviceTopic: SubscribeToDeviceTopic,
     private val observeTelemetry: ObserveTelemetry,
@@ -24,7 +25,7 @@ class DashboardViewModel(
     private val observeSignalQuality: ObserveSignalQuality
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow(DashboardState())
+    private val _state = MutableStateFlow(dashboardState)
     val state = _state.asStateFlow()
 
     private val _events = Channel<DashboardEvent>()
