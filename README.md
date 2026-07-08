@@ -150,7 +150,7 @@ iPulse/
 ## Testing
 
 ```bash
-./gradlew :shared:test
+./gradlew :shared:allTests
 ```
 
 ---
