@@ -2,110 +2,29 @@ package dev.esteki.ipulse.data.repository
 
 import dev.esteki.ipulse.data.local.dao.DeviceDao
 import dev.esteki.ipulse.data.local.dao.TelemetryReadingDao
-import dev.esteki.ipulse.data.local.entity.DeviceEntity
-import dev.esteki.ipulse.data.local.entity.TelemetryReadingEntity
 import dev.esteki.ipulse.data.local.mapper.toDomain
-import dev.esteki.ipulse.data.model.TelemetryPayload
-import dev.esteki.ipulse.data.remote.MqttClientAdapter
-import dev.esteki.ipulse.domain.model.*
+import dev.esteki.ipulse.domain.model.Device
+import dev.esteki.ipulse.domain.model.DomainError
+import dev.esteki.ipulse.domain.model.SignalQuality
+import dev.esteki.ipulse.domain.model.Stability
+import dev.esteki.ipulse.domain.model.TelemetryReading
 import dev.esteki.ipulse.domain.repository.DeviceRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class DeviceRepositoryImpl(
-    private val mqttClient: MqttClientAdapter,
     private val deviceDao: DeviceDao,
-    private val readingDao: TelemetryReadingDao,
-    private val json: Json = Json { ignoreUnknownKeys = true }
+    private val readingDao: TelemetryReadingDao
 ) : DeviceRepository {
-
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-
-    private val _signalQuality = MutableStateFlow(
-        SignalQuality(averageLatencyMs = 0.0, stability = Stability.NO_DATA)
-    )
-    override val signalQuality: Flow<SignalQuality> = _signalQuality.asStateFlow()
 
     override val devices: Flow<List<Device>> = deviceDao.observeAll().map { entities ->
         entities.map { it.toDomain() }
     }
 
-    init {
-        observeMqttMessages()
-    }
-
-    private fun observeMqttMessages() {
-        scope.launch {
-            try {
-                mqttClient.messages.collect { message ->
-                    try {
-                        processMessage(
-                            topic = message.topic,
-                            payload = message.payload,
-                            timestamp = Clock.System.now().toEpochMilliseconds()
-                        )
-                    } catch (_: Exception) {
-                        // Skip malformed messages; continue processing
-                    }
-                }
-            } catch (_: Exception) {
-                // Message flow ended; telemetry collection stopped
-            }
-        }
-    }
-
-    private fun processMessage(topic: String, payload: String, timestamp: Long) {
-        val sensorType = SensorType.fromTopic(topic) ?: return
-        val deviceId = extractDeviceId(topic)
-        val readingValue = parsePayload(payload)
-
-        scope.launch {
-            try {
-                val existingDevice = deviceDao.getById(deviceId)
-
-                val deviceEntity = if (existingDevice != null) {
-                    existingDevice.copy(
-                        latestReadingValue = readingValue,
-                        latestReadingTimestamp = timestamp,
-                        latestReadingTopic = topic
-                    )
-                } else {
-                    DeviceEntity(
-                        id = deviceId,
-                        name = formatDeviceName(deviceId),
-                        topic = topic,
-                        sensorType = sensorType.name,
-                        latestReadingValue = readingValue,
-                        latestReadingTimestamp = timestamp,
-                        latestReadingTopic = topic
-                    )
-                }
-
-                deviceDao.upsert(deviceEntity)
-
-                readingDao.insert(
-                    TelemetryReadingEntity(
-                        deviceId = deviceId,
-                        value = readingValue,
-                        sensorType = sensorType.name,
-                        timestamp = timestamp,
-                        topic = topic
-                    )
-                )
-
-                updateSignalQuality()
-            } catch (_: Exception) {
-                // DB operation failed for this message; skip
-            }
-        }
+    override val signalQuality: Flow<SignalQuality> = deviceDao.observeAll().map { entities ->
+        computeSignalQuality(entities)
     }
 
     override suspend fun getDeviceById(id: String): Result<Device> {
@@ -130,56 +49,31 @@ class DeviceRepositoryImpl(
         }
     }
 
-    private fun parsePayload(payload: String): Double {
-        return try {
-            json.decodeFromString<TelemetryPayload>(payload).value
-        } catch (_: Exception) {
-            payload.trim().toDoubleOrNull() ?: 0.0
+    private fun computeSignalQuality(entities: List<dev.esteki.ipulse.data.local.entity.DeviceEntity>): SignalQuality {
+        if (entities.isEmpty()) {
+            return SignalQuality(0.0, Stability.NO_DATA)
         }
-    }
 
-    private fun extractDeviceId(topic: String): String {
-        val parts = topic.split("/")
-        return if (parts.size >= 2) parts[1] else topic
-    }
-
-    private fun formatDeviceName(deviceId: String): String {
-        return deviceId.replace("-", " ").split(" ").joinToString(" ") { word ->
-            word.replaceFirstChar { it.uppercase() }
+        val now = Clock.System.now().toEpochMilliseconds()
+        val recentCount = entities.count { device ->
+            val timestamp = device.latestReadingTimestamp ?: 0
+            timestamp > now - 60000
         }
-    }
 
-    private suspend fun updateSignalQuality() {
-        try {
-            val entities = deviceDao.getAll()
-            if (entities.isEmpty()) {
-                _signalQuality.value = SignalQuality(0.0, Stability.NO_DATA)
-                return
-            }
-
-            val now = Clock.System.now().toEpochMilliseconds()
-            val recentCount = entities.count { device ->
-                val timestamp = device.latestReadingTimestamp ?: 0
-                timestamp > now - 60000
-            }
-
-            val stability = when {
-                recentCount > 10 -> Stability.STABLE
-                recentCount > 3 -> Stability.JITTERY
-                else -> Stability.NO_DATA
-            }
-
-            val lastTimestamp = entities
-                .mapNotNull { it.latestReadingTimestamp }
-                .maxByOrNull { it } ?: 0L
-
-            _signalQuality.value = SignalQuality(
-                averageLatencyMs = 40.0,
-                stability = stability,
-                lastReceivedAt = if (lastTimestamp > 0) kotlin.time.Instant.fromEpochMilliseconds(lastTimestamp) else null
-            )
-        } catch (_: Exception) {
-            // Signal quality update failed; keep previous value
+        val stability = when {
+            recentCount > 10 -> Stability.STABLE
+            recentCount > 3 -> Stability.JITTERY
+            else -> Stability.NO_DATA
         }
+
+        val lastTimestamp = entities
+            .mapNotNull { it.latestReadingTimestamp }
+            .maxByOrNull { it } ?: 0L
+
+        return SignalQuality(
+            averageLatencyMs = 40.0,
+            stability = stability,
+            lastReceivedAt = if (lastTimestamp > 0) Instant.fromEpochMilliseconds(lastTimestamp) else null
+        )
     }
 }

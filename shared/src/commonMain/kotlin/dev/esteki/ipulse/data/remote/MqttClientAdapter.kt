@@ -1,11 +1,12 @@
 package dev.esteki.ipulse.data.remote
 
 import dev.esteki.ipulse.data.model.MqttMessage
+import dev.esteki.ipulse.domain.model.ConnectionState
 import kotlinx.coroutines.flow.Flow
 
 interface MqttClientAdapter {
     val messages: Flow<MqttMessage>
-    val connectionState: Flow<MqttConnectionState>
+    val connectionState: Flow<ConnectionState>
 
     suspend fun connect(brokerUrl: String, port: Int)
     suspend fun disconnect()

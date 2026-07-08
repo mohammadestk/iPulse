@@ -7,9 +7,11 @@ import de.kempmobil.ktor.mqtt.Topic
 import de.kempmobil.ktor.mqtt.TopicFilter
 import de.kempmobil.ktor.mqtt.ws.MqttClient
 import dev.esteki.ipulse.data.model.MqttMessage
+import dev.esteki.ipulse.domain.model.ConnectionState
 import io.ktor.http.Url
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,15 +26,16 @@ class KempMqttClient : MqttClientAdapter {
     private val _messages = MutableSharedFlow<MqttMessage>(extraBufferCapacity = 64)
     override val messages: SharedFlow<MqttMessage> = _messages.asSharedFlow()
 
-    private val _connectionState = MutableStateFlow<MqttConnectionState>(MqttConnectionState.Disconnected)
-    override val connectionState: StateFlow<MqttConnectionState> = _connectionState.asStateFlow()
+    private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
+    override val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
     private var client: MqttClient? = null
+    private var packetsJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val subscribedTopics = mutableSetOf<String>()
 
     override suspend fun connect(brokerUrl: String, port: Int) {
-        _connectionState.value = MqttConnectionState.Connecting
+        _connectionState.value = ConnectionState.Connecting
 
         try {
             val wsUrl = "wss://$brokerUrl:$port/mqtt"
@@ -40,25 +43,27 @@ class KempMqttClient : MqttClientAdapter {
 
             client?.connect()?.onSuccess { connack ->
                 if (connack.isSuccess) {
-                    _connectionState.value = MqttConnectionState.Connected
+                    _connectionState.value = ConnectionState.Connected
                     resubscribeAll()
                     observePublishedPackets()
                 } else {
                     val detail = connack.toString()
-                    _connectionState.value = MqttConnectionState.Error("Broker rejected: $detail")
+                    _connectionState.value = ConnectionState.Error("Broker rejected: $detail")
                 }
             }?.onFailure { error ->
-                _connectionState.value = MqttConnectionState.Error(error.message ?: "Connection failed", error)
+                _connectionState.value = ConnectionState.Error(error.message ?: "Connection failed", error)
             }
         } catch (e: Exception) {
-            _connectionState.value = MqttConnectionState.Error("Connection failed: ${e.message}", e)
+            _connectionState.value = ConnectionState.Error("Connection failed: ${e.message}", e)
         }
     }
 
     private fun observePublishedPackets() {
-        scope.launch {
+        packetsJob?.cancel()
+        packetsJob = scope.launch {
+            val currentClient = client ?: return@launch
             try {
-                client?.publishedPackets?.collect { publish ->
+                currentClient.publishedPackets.collect { publish ->
                     try {
                         val topic = publish.topic.name
                         val payload = publish.payload.toByteArray().decodeToString()
@@ -69,23 +74,23 @@ class KempMqttClient : MqttClientAdapter {
                         }
                         _messages.emit(MqttMessage(topic = topic, payload = payload, qos = qos))
                     } catch (_: Exception) {
-                        // Skip malformed publish packet
                     }
                 }
             } catch (_: Exception) {
-                // publishedPackets flow ended or errored
             }
         }
     }
 
     override suspend fun disconnect() {
+        packetsJob?.cancel()
+        packetsJob = null
         try {
             client?.disconnect()
         } catch (_: Exception) {
         }
         client = null
         subscribedTopics.clear()
-        _connectionState.value = MqttConnectionState.Disconnected
+        _connectionState.value = ConnectionState.Disconnected
     }
 
     override suspend fun subscribe(topicFilter: String) {
@@ -93,7 +98,7 @@ class KempMqttClient : MqttClientAdapter {
             subscribedTopics.add(topicFilter)
             client?.subscribe(listOf(TopicFilter(Topic(topicFilter))))
         } catch (e: Exception) {
-            _connectionState.value = MqttConnectionState.Error("Subscribe failed: ${e.message}", e)
+            _connectionState.value = ConnectionState.Error("Subscribe failed: ${e.message}", e)
         }
     }
 
@@ -126,19 +131,8 @@ class KempMqttClient : MqttClientAdapter {
                 try {
                     client?.subscribe(listOf(TopicFilter(Topic(topic))))
                 } catch (_: Exception) {
-                    // Skip topics that fail to resubscribe
                 }
             }
         }
-    }
-
-    fun destroy() {
-        scope.launch {
-            try {
-                client?.disconnect()
-            } catch (_: Exception) {
-            }
-        }
-        client = null
     }
 }

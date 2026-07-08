@@ -12,7 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.esteki.ipulse.domain.model.ConnectionState
+import dev.esteki.ipulse.presentation.component.ConnectionChip
 import dev.esteki.ipulse.presentation.model.ConnectionEventUi
+import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
 import dev.esteki.ipulse.presentation.theme.IPulseTheme
 import dev.esteki.ipulse.presentation.viewmodel.DeviceDetailViewModel
@@ -97,10 +99,7 @@ fun DeviceDetailScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             ReadoutPanel(
-                latestValue = state.latestValue,
-                unit = state.unit,
-                sensorType = state.sensorType,
-                connectionState = state.connectionState,
+                device = state.device,
                 signalQuality = state.signalQuality
             )
 
@@ -136,12 +135,18 @@ fun DeviceDetailScreen(
 
 @Composable
 private fun ReadoutPanel(
-    latestValue: String,
-    unit: String,
-    sensorType: String,
-    connectionState: ConnectionState,
+    device: DeviceUi?,
     signalQuality: SignalQualityUi?
 ) {
+    val connectionState = device?.connectionState ?: ConnectionState.Disconnected
+    val label = when (connectionState) {
+        is ConnectionState.Connected -> "Live"
+        is ConnectionState.Reconnecting -> "Reconnecting"
+        is ConnectionState.Connecting -> "Connecting"
+        is ConnectionState.Error -> "Error"
+        is ConnectionState.Disconnected -> "Offline"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -154,19 +159,13 @@ private fun ReadoutPanel(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = sensorType,
+                text = device?.sensorType?.displayName ?: "",
                 style = IPulseTheme.typography.overline,
                 color = IPulseTheme.colors.textDim
             )
             ConnectionChip(
                 state = connectionState,
-                label = when (connectionState) {
-                    is ConnectionState.Connected -> "Live"
-                    is ConnectionState.Reconnecting -> "Reconnecting"
-                    is ConnectionState.Connecting -> "Connecting"
-                    is ConnectionState.Error -> "Error"
-                    is ConnectionState.Disconnected -> "Offline"
-                }
+                label = label
             )
         }
 
@@ -174,12 +173,12 @@ private fun ReadoutPanel(
 
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
-                text = latestValue,
+                text = device?.latestValue ?: "--",
                 style = IPulseTheme.typography.dataLarge,
                 color = if (connectionState is ConnectionState.Connected) IPulseTheme.colors.signalCyan else IPulseTheme.colors.textDim
             )
             Text(
-                text = unit,
+                text = device?.unit ?: "",
                 style = IPulseTheme.typography.dataMedium,
                 color = IPulseTheme.colors.textDim,
                 modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)

@@ -1,7 +1,6 @@
 package dev.esteki.ipulse.data.repository
 
 import dev.esteki.ipulse.data.remote.MqttClientAdapter
-import dev.esteki.ipulse.data.remote.MqttConnectionState
 import dev.esteki.ipulse.domain.model.ConnectionEvent
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.EventType
@@ -38,15 +37,7 @@ class BrokerConnectionImpl(
     private val _connectionEvents = MutableSharedFlow<ConnectionEvent>(extraBufferCapacity = 64)
     override val connectionEvents: Flow<ConnectionEvent> = _connectionEvents.asSharedFlow()
 
-    override val connectionState: Flow<ConnectionState> = mqttClient.connectionState.map { state ->
-        when (state) {
-            MqttConnectionState.Connected -> ConnectionState.Connected
-            MqttConnectionState.Connecting -> ConnectionState.Connecting
-            MqttConnectionState.Reconnecting -> ConnectionState.Reconnecting
-            MqttConnectionState.Disconnected -> ConnectionState.Disconnected
-            is MqttConnectionState.Error -> ConnectionState.Error(state.detail, state.cause)
-        }
-    }
+    override val connectionState: Flow<ConnectionState> = mqttClient.connectionState
 
     override val messages: Flow<BrokerMessage> = mqttClient.messages.map { msg ->
         BrokerMessage(topic = msg.topic, payload = msg.payload)
@@ -60,10 +51,10 @@ class BrokerConnectionImpl(
         }
     }
 
-    private suspend fun handleConnectionStateChange(state: MqttConnectionState) {
+    private suspend fun handleConnectionStateChange(state: ConnectionState) {
         val now = Clock.System.now()
         when (state) {
-            MqttConnectionState.Connected -> {
+            ConnectionState.Connected -> {
                 reconnectAttempt = 0
                 reconnectJob?.cancel()
                 reconnectJob = null
@@ -71,22 +62,21 @@ class BrokerConnectionImpl(
                     ConnectionEvent(timestamp = now, type = EventType.CONNECTED, message = "Connected")
                 )
             }
-            MqttConnectionState.Connecting -> {
-                // No event for transient connecting state
+            ConnectionState.Connecting -> {
             }
-            MqttConnectionState.Reconnecting -> {
+            ConnectionState.Reconnecting -> {
                 _connectionEvents.emit(
                     ConnectionEvent(timestamp = now, type = EventType.RECONNECTING, message = "Reconnecting")
                 )
             }
-            MqttConnectionState.Disconnected -> {
+            ConnectionState.Disconnected -> {
                 reconnectJob?.cancel()
                 reconnectJob = null
                 _connectionEvents.emit(
                     ConnectionEvent(timestamp = now, type = EventType.DISCONNECTED, message = "Disconnected")
                 )
             }
-            is MqttConnectionState.Error -> {
+            is ConnectionState.Error -> {
                 _connectionEvents.emit(
                     ConnectionEvent(
                         timestamp = now,
@@ -104,8 +94,7 @@ class BrokerConnectionImpl(
     private fun startReconnection() {
         reconnectJob = scope.launch {
             while (true) {
-                val currentState = (mqttClient.connectionState as? kotlinx.coroutines.flow.StateFlow)?.value
-                if (currentState !is MqttConnectionState.Error || !shouldReconnect) break
+                if (!shouldReconnect) break
 
                 reconnectAttempt++
                 val backoff = calculateBackoff(reconnectAttempt)

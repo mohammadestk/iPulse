@@ -19,7 +19,7 @@ iPulse is a Kotlin Multiplatform IoT dashboard that monitors device telemetry ov
 | `desktopApp/` | Desktop entry point (`MainKt`) |
 | `webApp/` | Web entry point (Wasm + JS targets) |
 | `iosApp/` | iOS entry point (SwiftUI wrapping Compose via `MainViewController`) |
-| `publisher/` | Test tool — publishes sample MQTT data to `test.mosquitto.org:8080` |
+| `publisher/` | Test tool — publishes sample MQTT data to `test.mosquitto.org:8081` |
 | `specs/` | Design system reference (HTML) |
 
 ## Build & Run
@@ -58,7 +58,7 @@ iPulse is a Kotlin Multiplatform IoT dashboard that monitors device telemetry ov
 | Networking | Ktor | MQTT over WebSocket |
 | Database | Room | KMP-compatible |
 | DI | Koin | |
-| MQTT Broker | `test.mosquitto.org:8080` | WebSocket, hardcoded |
+| MQTT Broker | `test.mosquitto.org:8081` | WebSocket, hardcoded in `BrokerConfig` |
 | UI | Compose Multiplatform + Material 3 | |
 | ViewModel | AndroidX ViewModel (KMP) | `lifecycle-viewmodel-compose` |
 
@@ -111,8 +111,8 @@ wasmJsMain/     → Wasm web target
 
 ```
 presentation/  →  UI, ViewModels, MVI contracts, theme, navigation
-domain/        →  Models, repository interfaces, use cases
-data/          →  Repository implementations, remote/data sources, DTOs
+domain/        →  Models, repository interfaces, use cases, config
+data/          →  Repository implementations, services, remote/data sources, DTOs
 ```
 
 Rules:
@@ -120,7 +120,7 @@ Rules:
 - **Data depends on domain.** Implementations import domain interfaces and models. Domain never imports data.
 - **Presentation depends on domain.** ViewModels inject domain services, never data-layer classes. UI maps domain models to UI models.
 - **One direction of dependency:** presentation → domain ← data. Domain is the center; it knows nothing about its consumers or providers.
-- **No god classes.** If a class has more than ~5 responsibilities, split it. Domain services orchestrate — they don't parse payloads, manage in-memory state, or know about MQTT topics.
+- **No god classes.** If a class has more than ~5 responsibilities, split it. Repository implementations are thin data access layers — they don't parse payloads or manage MQTT ingestion. Services like `TelemetryIngestionService` own side effects and data pipelines.
 - **Use cases are mandatory.** Every interaction between presentation and domain goes through a use case. Each use case encapsulates one business operation with a single `operator fun invoke()` method. Use cases are small, focused, and named with verb-noun pairs (e.g. `ConnectToBroker`, `GetDeviceById`, `ObserveTelemetry`). They live in `domain/usecase/`, inject domain services or repositories, and are the only way ViewModels access domain logic. If a use case only delegates to one method, that's fine — it's a seam for testing and a boundary that keeps the domain explicit.
 
 ## Conventions

@@ -6,6 +6,5 @@ import kotlinx.serialization.Serializable
 data class MqttMessage(
     val topic: String,
     val payload: String,
-    val qos: Int = 1,
-    val retain: Boolean = false
+    val qos: Int = 1
 )

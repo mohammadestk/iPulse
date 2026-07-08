@@ -6,6 +6,7 @@ import dev.esteki.ipulse.data.remote.KempMqttClient
 import dev.esteki.ipulse.data.remote.MqttClientAdapter
 import dev.esteki.ipulse.data.repository.BrokerConnectionImpl
 import dev.esteki.ipulse.data.repository.DeviceRepositoryImpl
+import dev.esteki.ipulse.data.service.TelemetryIngestionService
 import dev.esteki.ipulse.domain.repository.BrokerConnection
 import dev.esteki.ipulse.domain.repository.DeviceRepository
 import kotlinx.serialization.json.Json
@@ -33,10 +34,10 @@ val dataModule = module {
 
     single<DeviceRepository> {
         DeviceRepositoryImpl(
-            mqttClient = get(),
             deviceDao = get(),
-            readingDao = get(),
-            json = get()
+            readingDao = get()
         )
     }
+
+    single { TelemetryIngestionService(mqttClient = get(), deviceDao = get(), readingDao = get(), json = get()) }
 }

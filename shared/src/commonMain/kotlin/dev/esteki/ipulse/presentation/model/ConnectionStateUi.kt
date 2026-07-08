@@ -10,6 +10,12 @@ data class ConnectionStateUi(
 
 fun ConnectionState.toConnectionStateUi(): ConnectionStateUi = ConnectionStateUi(
     state = this,
-    displayName = displayName,
+    displayName = when (this) {
+        is ConnectionState.Connected -> "Connected"
+        is ConnectionState.Connecting -> "Connecting"
+        is ConnectionState.Reconnecting -> "Reconnecting"
+        is ConnectionState.Disconnected -> "Disconnected"
+        is ConnectionState.Error -> "Error: $detail"
+    },
     isConnected = this is ConnectionState.Connected
 )

@@ -3,7 +3,6 @@ package dev.esteki.ipulse.presentation.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -28,11 +25,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dev.esteki.ipulse.domain.config.BrokerConfig
 import dev.esteki.ipulse.domain.model.ConnectionState
+import dev.esteki.ipulse.presentation.component.ConnectionChip
 import dev.esteki.ipulse.presentation.model.ConnectionStateUi
 import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.SignalQualityUi
@@ -89,7 +87,7 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "broker: test.mosquitto.org",
+                text = "broker: ${BrokerConfig.HOST}",
                 style = IPulseTheme.typography.monoMicro,
                 color = IPulseTheme.colors.textDim
             )
@@ -171,41 +169,6 @@ private fun ConnectionStatusBar(
                 color = IPulseTheme.colors.textDim
             )
         }
-    }
-}
-
-@Composable
-fun ConnectionChip(
-    state: ConnectionState,
-    label: String,
-    modifier: Modifier = Modifier
-) {
-    val (color, dimColor) = when (state) {
-        is ConnectionState.Connected -> IPulseTheme.colors.signalCyan to IPulseTheme.colors.signalCyanDim
-        is ConnectionState.Connecting,
-        is ConnectionState.Reconnecting -> IPulseTheme.colors.signalAmber to IPulseTheme.colors.signalAmberDim
-        is ConnectionState.Error -> IPulseTheme.colors.faultRed to IPulseTheme.colors.faultRedDim
-        is ConnectionState.Disconnected -> IPulseTheme.colors.textDim to IPulseTheme.colors.border
-    }
-
-    Row(
-        modifier = modifier
-            .background(dimColor.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(6.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Text(
-            text = label,
-            style = IPulseTheme.typography.monoMicro,
-            color = color
-        )
     }
 }
 

@@ -56,14 +56,9 @@ class DeviceDetailViewModel(
             _state.update { it.copy(isLoading = true) }
             getDeviceById(deviceId)
                 .onSuccess { device ->
-                    val deviceUi = device.toDeviceUi()
                     _state.update {
                         it.copy(
-                            device = deviceUi,
-                            latestValue = deviceUi.latestValue,
-                            unit = deviceUi.unit,
-                            sensorType = device.sensorType.displayName,
-                            connectionState = device.connectionState,
+                            device = device.toDeviceUi(),
                             isLoading = false
                         )
                     }
@@ -102,7 +97,4 @@ class DeviceDetailViewModel(
             .launchIn(viewModelScope)
     }
 
-    override fun onCleared() {
-        println("device detail viewmodel cleared")
-    }
 }

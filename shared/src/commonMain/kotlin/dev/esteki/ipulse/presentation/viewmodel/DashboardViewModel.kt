@@ -2,6 +2,7 @@ package dev.esteki.ipulse.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.esteki.ipulse.domain.config.BrokerConfig
 import dev.esteki.ipulse.domain.usecase.*
 import dev.esteki.ipulse.presentation.model.toConnectionEventUi
 import dev.esteki.ipulse.presentation.model.toConnectionStateUi
@@ -39,7 +40,7 @@ class DashboardViewModel(
 
     private fun autoConnect() {
         viewModelScope.launch {
-            connectToBroker("test.mosquitto.org", 8081)
+            connectToBroker(BrokerConfig.HOST, BrokerConfig.PORT)
                 .onSuccess { subscribeToDeviceTopic("#") }
                 .onFailure { error ->
                     _state.update { it.copy(errorMessage = error.message ?: "Connection failed") }
@@ -103,7 +104,4 @@ class DashboardViewModel(
             .launchIn(viewModelScope)
     }
 
-    override fun onCleared() {
-        println("Home viewmodel cleared")
-    }
 }
