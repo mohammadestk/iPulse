@@ -150,18 +150,8 @@ iPulse/
 ## Testing
 
 ```bash
-# Unit tests (all platforms)
-./gradlew :shared:jvmTest                    # Desktop
-./gradlew :shared:testAndroidHostTest         # Android instrumented
-./gradlew :shared:wasmJsTest                  # Web (Wasm)
-./gradlew :shared:jsTest                      # Web (JS)
-./gradlew :shared:iosSimulatorArm64Test       # iOS simulator
-
-# All shared module tests
 ./gradlew :shared:test
 ```
-
-Test sources live in `shared/src/commonTest/kotlin/` and cover domain models, data mappers, ViewModels, repositories, and Compose UI screens/components.
 
 ---
 
