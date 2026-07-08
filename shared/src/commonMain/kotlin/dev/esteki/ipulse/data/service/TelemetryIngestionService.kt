@@ -2,95 +2,81 @@ package dev.esteki.ipulse.data.service
 
 import dev.esteki.ipulse.data.local.dao.DeviceDao
 import dev.esteki.ipulse.data.local.dao.TelemetryReadingDao
-import dev.esteki.ipulse.data.local.entity.DeviceEntity
-import dev.esteki.ipulse.data.local.entity.TelemetryReadingEntity
+import dev.esteki.ipulse.data.local.mapper.toDomain
+import dev.esteki.ipulse.data.local.mapper.toEntity
 import dev.esteki.ipulse.data.model.TelemetryPayload
-import dev.esteki.ipulse.data.remote.MqttClientAdapter
+import dev.esteki.ipulse.data.remote.MqttClient
+import dev.esteki.ipulse.domain.model.Device
 import dev.esteki.ipulse.domain.model.SensorType
+import dev.esteki.ipulse.domain.model.TelemetryReading
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class TelemetryIngestionService(
-    private val mqttClient: MqttClientAdapter,
+    private val mqttClient: MqttClient,
     private val deviceDao: DeviceDao,
     private val readingDao: TelemetryReadingDao,
     private val json: Json
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private val messageChannel = Channel<MessageEvent>(Channel.BUFFERED)
 
     init {
-        scope.launch { observeMqttMessages() }
-        scope.launch { processMessageChannel() }
+        scope.launch { ingest() }
     }
 
-    private suspend fun observeMqttMessages() {
-        mqttClient.messages.collect { message ->
-            messageChannel.send(
-                MessageEvent(
-                    topic = message.topic,
-                    payload = message.payload,
-                    timestamp = Clock.System.now().toEpochMilliseconds()
-                )
-            )
-        }
+    fun close() {
+        scope.cancel()
     }
 
-    private suspend fun processMessageChannel() {
-        for (event in messageChannel) {
-            try {
-                processMessage(event)
-            } catch (_: Exception) {
-            }
-        }
+    private suspend fun ingest() {
+        mqttClient.messages
+            .conflate()
+            .catch { /* MQTT message flow ended */ }
+            .collect { message -> processMessage(message.topic, message.payload) }
     }
 
-    private suspend fun processMessage(event: MessageEvent) {
-        val sensorType = SensorType.fromTopic(event.topic) ?: return
-        val deviceId = extractDeviceId(event.topic)
-        val readingValue = parsePayload(event.payload)
+    private suspend fun processMessage(topic: String, payload: String) {
+        val sensorType = SensorType.fromTopic(topic) ?: return
+        val reading = parseReading(topic, payload, Clock.System.now()) ?: return
+        val deviceId = extractDeviceId(topic)
 
-        val existingDevice = deviceDao.getById(deviceId)
-        val deviceEntity = if (existingDevice != null) {
-            existingDevice.copy(
-                latestReadingValue = readingValue,
-                latestReadingTimestamp = event.timestamp,
-                latestReadingTopic = event.topic
-            )
-        } else {
-            DeviceEntity(
-                id = deviceId,
-                name = formatDeviceName(deviceId),
-                topic = event.topic,
-                sensorType = sensorType.name,
-                latestReadingValue = readingValue,
-                latestReadingTimestamp = event.timestamp,
-                latestReadingTopic = event.topic
-            )
-        }
+        val device = deviceDao.getById(deviceId)?.toDomain()?.copy(latestReading = reading) ?: Device(
+            id = deviceId,
+            name = formatDeviceName(deviceId),
+            topic = topic,
+            sensorType = sensorType,
+            latestReading = reading
+        )
 
-        deviceDao.upsert(deviceEntity)
-        readingDao.insert(
-            TelemetryReadingEntity(
-                deviceId = deviceId,
-                value = readingValue,
-                sensorType = sensorType.name,
-                timestamp = event.timestamp,
-                topic = event.topic
-            )
+        deviceDao.upsert(device.toEntity())
+        println(reading)
+        readingDao.insert(reading.toEntity(deviceId))
+    }
+
+    private fun parseReading(topic: String, payload: String, now: Instant): TelemetryReading? {
+        val sensorType = SensorType.fromTopic(topic) ?: return null
+        val value = parseValue(payload) ?: return null
+        return TelemetryReading(
+            value = value,
+            sensorType = sensorType,
+            timestamp = now,
+            topic = topic
         )
     }
 
-    private fun parsePayload(payload: String): Double {
+    private fun parseValue(payload: String): Double? {
         return try {
             json.decodeFromString<TelemetryPayload>(payload).value
         } catch (_: Exception) {
-            payload.trim().toDoubleOrNull() ?: 0.0
+            payload.trim().toDoubleOrNull()
         }
     }
 
@@ -104,10 +90,4 @@ class TelemetryIngestionService(
             word.replaceFirstChar { it.uppercase() }
         }
     }
-
-    private data class MessageEvent(
-        val topic: String,
-        val payload: String,
-        val timestamp: Long
-    )
 }
