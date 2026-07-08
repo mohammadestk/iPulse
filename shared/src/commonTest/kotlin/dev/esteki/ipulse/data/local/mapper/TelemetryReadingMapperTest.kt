@@ -1,9 +1,9 @@
 package dev.esteki.ipulse.data.local.mapper
 
-import com.google.common.truth.Truth.assertThat
 import dev.esteki.ipulse.data.local.entity.TelemetryReadingEntity
 import dev.esteki.ipulse.domain.model.SensorType
 import dev.esteki.ipulse.domain.model.TelemetryReading
+import kotlin.test.assertEquals
 import kotlin.test.Test
 import kotlin.time.Instant
 
@@ -33,25 +33,25 @@ class TelemetryReadingMapperTest {
 
         val domain = e.toDomain()
 
-        assertThat(domain.id).isEqualTo(42)
-        assertThat(domain.value).isEqualTo(-18.2)
-        assertThat(domain.sensorType).isEqualTo(SensorType.PRESSURE)
-        assertThat(domain.timestamp).isEqualTo(Instant.fromEpochMilliseconds(1_000_000))
-        assertThat(domain.topic).isEqualTo("/esteki/devices")
+        assertEquals(42, domain.id)
+        assertEquals(-18.2, domain.value)
+        assertEquals(SensorType.PRESSURE, domain.sensorType)
+        assertEquals(Instant.fromEpochMilliseconds(1_000_000), domain.timestamp)
+        assertEquals("/esteki/devices", domain.topic)
     }
 
     @Test
     fun entityToDomain_unknownSensorType_fallsBackToTemperature() {
         val e = entity(sensorType = "UNKNOWN")
 
-        assertThat(e.toDomain().sensorType).isEqualTo(SensorType.TEMPERATURE)
+        assertEquals(SensorType.TEMPERATURE, e.toDomain().sensorType)
     }
 
     @Test
     fun entityToDomain_humidity() {
         val e = entity(sensorType = "HUMIDITY")
 
-        assertThat(e.toDomain().sensorType).isEqualTo(SensorType.HUMIDITY)
+        assertEquals(SensorType.HUMIDITY, e.toDomain().sensorType)
     }
 
     // --- TelemetryReading.toEntity() ---
@@ -68,11 +68,11 @@ class TelemetryReadingMapperTest {
 
         val entity = reading.toEntity("device-1")
 
-        assertThat(entity.deviceId).isEqualTo("device-1")
-        assertThat(entity.value).isEqualTo(42.0)
-        assertThat(entity.sensorType).isEqualTo("HUMIDITY")
-        assertThat(entity.timestamp).isEqualTo(1_720_000_000_000)
-        assertThat(entity.topic).isEqualTo("/t")
+        assertEquals("device-1", entity.deviceId)
+        assertEquals(42.0, entity.value)
+        assertEquals("HUMIDITY", entity.sensorType)
+        assertEquals(1_720_000_000_000, entity.timestamp)
+        assertEquals("/t", entity.topic)
     }
 
     @Test
@@ -81,7 +81,7 @@ class TelemetryReadingMapperTest {
 
         val entity = reading.toEntity("d1")
 
-        assertThat(entity.id).isEqualTo(0) // auto-generated, not copied from domain
+        assertEquals(0, entity.id) // auto-generated, not copied from domain
     }
 
     // --- Round-trip ---
@@ -93,10 +93,10 @@ class TelemetryReadingMapperTest {
         val domain = original.toDomain()
         val roundTripped = domain.toEntity("d1")
 
-        assertThat(roundTripped.deviceId).isEqualTo(original.deviceId)
-        assertThat(roundTripped.value).isEqualTo(original.value)
-        assertThat(roundTripped.sensorType).isEqualTo(original.sensorType)
-        assertThat(roundTripped.timestamp).isEqualTo(original.timestamp)
-        assertThat(roundTripped.topic).isEqualTo(original.topic)
+        assertEquals(original.deviceId, roundTripped.deviceId)
+        assertEquals(original.value, roundTripped.value)
+        assertEquals(original.sensorType, roundTripped.sensorType)
+        assertEquals(original.timestamp, roundTripped.timestamp)
+        assertEquals(original.topic, roundTripped.topic)
     }
 }

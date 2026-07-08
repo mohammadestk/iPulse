@@ -1,11 +1,13 @@
 package dev.esteki.ipulse.data.local.mapper
 
-import com.google.common.truth.Truth.assertThat
 import dev.esteki.ipulse.data.local.entity.DeviceEntity
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.Device
 import dev.esteki.ipulse.domain.model.SensorType
 import dev.esteki.ipulse.domain.model.TelemetryReading
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.Test
 import kotlin.time.Instant
 
@@ -64,14 +66,14 @@ class DeviceMapperTest {
 
         val domain = entity.toDomain()
 
-        assertThat(domain.id).isEqualTo("d1")
-        assertThat(domain.name).isEqualTo("Ward A")
-        assertThat(domain.topic).isEqualTo("/t")
-        assertThat(domain.sensorType).isEqualTo(SensorType.HUMIDITY)
-        assertThat(domain.connectionState).isEqualTo(ConnectionState.Connected)
-        assertThat(domain.latestReading).isNotNull()
-        assertThat(domain.latestReading!!.value).isEqualTo(61.0)
-        assertThat(domain.latestReading!!.topic).isEqualTo("/t/humidity")
+        assertEquals("d1", domain.id)
+        assertEquals("Ward A", domain.name)
+        assertEquals("/t", domain.topic)
+        assertEquals(SensorType.HUMIDITY, domain.sensorType)
+        assertEquals(ConnectionState.Connected, domain.connectionState)
+        assertNotNull(domain.latestReading)
+        assertEquals(61.0, domain.latestReading.value)
+        assertEquals("/t/humidity", domain.latestReading.topic)
     }
 
     @Test
@@ -80,7 +82,7 @@ class DeviceMapperTest {
 
         val domain = entity.toDomain()
 
-        assertThat(domain.latestReading).isNull()
+        assertNull(domain.latestReading)
     }
 
     @Test
@@ -89,31 +91,27 @@ class DeviceMapperTest {
 
         val domain = entity.toDomain()
 
-        assertThat(domain.sensorType).isEqualTo(SensorType.TEMPERATURE)
+        assertEquals(SensorType.TEMPERATURE, domain.sensorType)
     }
 
     @Test
     fun entityToDomain_connectionStateConnected() {
-        assertThat(entity(connectionState = "Connected").toDomain().connectionState)
-            .isEqualTo(ConnectionState.Connected)
+        assertEquals(ConnectionState.Connected, entity(connectionState = "Connected").toDomain().connectionState)
     }
 
     @Test
     fun entityToDomain_connectionStateReconnecting() {
-        assertThat(entity(connectionState = "Reconnecting").toDomain().connectionState)
-            .isEqualTo(ConnectionState.Reconnecting)
+        assertEquals(ConnectionState.Reconnecting, entity(connectionState = "Reconnecting").toDomain().connectionState)
     }
 
     @Test
     fun entityToDomain_connectionStateDisconnected() {
-        assertThat(entity(connectionState = "Disconnected").toDomain().connectionState)
-            .isEqualTo(ConnectionState.Disconnected)
+        assertEquals(ConnectionState.Disconnected, entity(connectionState = "Disconnected").toDomain().connectionState)
     }
 
     @Test
     fun entityToDomain_unknownConnectionState_fallsBackToDisconnected() {
-        assertThat(entity(connectionState = "Bogus").toDomain().connectionState)
-            .isEqualTo(ConnectionState.Disconnected)
+        assertEquals(ConnectionState.Disconnected, entity(connectionState = "Bogus").toDomain().connectionState)
     }
 
     // --- Device.toEntity() ---
@@ -138,14 +136,14 @@ class DeviceMapperTest {
 
         val entity = d.toEntity()
 
-        assertThat(entity.id).isEqualTo("d1")
-        assertThat(entity.name).isEqualTo("Ward A")
-        assertThat(entity.topic).isEqualTo("/t")
-        assertThat(entity.sensorType).isEqualTo("PRESSURE")
-        assertThat(entity.connectionState).isEqualTo("Reconnecting")
-        assertThat(entity.latestReadingValue).isEqualTo(24.6)
-        assertThat(entity.latestReadingTimestamp).isEqualTo(1_720_000_000_000)
-        assertThat(entity.latestReadingTopic).isEqualTo("/t")
+        assertEquals("d1", entity.id)
+        assertEquals("Ward A", entity.name)
+        assertEquals("/t", entity.topic)
+        assertEquals("PRESSURE", entity.sensorType)
+        assertEquals("Reconnecting", entity.connectionState)
+        assertEquals(24.6, entity.latestReadingValue)
+        assertEquals(1_720_000_000_000, entity.latestReadingTimestamp)
+        assertEquals("/t", entity.latestReadingTopic)
     }
 
     @Test
@@ -154,9 +152,9 @@ class DeviceMapperTest {
 
         val entity = d.toEntity()
 
-        assertThat(entity.latestReadingValue).isNull()
-        assertThat(entity.latestReadingTimestamp).isNull()
-        assertThat(entity.latestReadingTopic).isNull()
+        assertNull(entity.latestReadingValue)
+        assertNull(entity.latestReadingTimestamp)
+        assertNull(entity.latestReadingTopic)
     }
 
     // --- Round-trip ---
@@ -177,13 +175,13 @@ class DeviceMapperTest {
         val domain = original.toDomain()
         val roundTripped = domain.toEntity()
 
-        assertThat(roundTripped.id).isEqualTo(original.id)
-        assertThat(roundTripped.name).isEqualTo(original.name)
-        assertThat(roundTripped.topic).isEqualTo(original.topic)
-        assertThat(roundTripped.sensorType).isEqualTo(original.sensorType)
-        assertThat(roundTripped.connectionState).isEqualTo(original.connectionState)
-        assertThat(roundTripped.latestReadingValue).isEqualTo(original.latestReadingValue)
-        assertThat(roundTripped.latestReadingTimestamp).isEqualTo(original.latestReadingTimestamp)
-        assertThat(roundTripped.latestReadingTopic).isEqualTo(original.latestReadingTopic)
+        assertEquals(original.id, roundTripped.id)
+        assertEquals(original.name, roundTripped.name)
+        assertEquals(original.topic, roundTripped.topic)
+        assertEquals(original.sensorType, roundTripped.sensorType)
+        assertEquals(original.connectionState, roundTripped.connectionState)
+        assertEquals(original.latestReadingValue, roundTripped.latestReadingValue)
+        assertEquals(original.latestReadingTimestamp, roundTripped.latestReadingTimestamp)
+        assertEquals(original.latestReadingTopic, roundTripped.latestReadingTopic)
     }
 }

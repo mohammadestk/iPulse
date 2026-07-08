@@ -1,7 +1,9 @@
 package dev.esteki.ipulse.data.repository
 
 import app.cash.turbine.test
-import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import dev.esteki.ipulse.data.local.entity.DeviceEntity
 import dev.esteki.ipulse.domain.model.Stability
 import dev.esteki.ipulse.domain.model.ConnectionState
@@ -40,7 +42,7 @@ class DeviceRepositoryImplTest {
 
         repository.signalQuality.test {
             val quality = awaitItem()
-            assertThat(quality.stability).isEqualTo(Stability.NO_DATA)
+            assertEquals(Stability.NO_DATA, quality.stability)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -52,7 +54,7 @@ class DeviceRepositoryImplTest {
 
         repository.signalQuality.test {
             val quality = awaitItem()
-            assertThat(quality.stability).isEqualTo(Stability.STABLE)
+            assertEquals(Stability.STABLE, quality.stability)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -64,7 +66,7 @@ class DeviceRepositoryImplTest {
 
         repository.signalQuality.test {
             val quality = awaitItem()
-            assertThat(quality.stability).isEqualTo(Stability.JITTERY)
+            assertEquals(Stability.JITTERY, quality.stability)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -76,7 +78,7 @@ class DeviceRepositoryImplTest {
 
         repository.signalQuality.test {
             val quality = awaitItem()
-            assertThat(quality.stability).isEqualTo(Stability.NO_DATA)
+            assertEquals(Stability.NO_DATA, quality.stability)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -92,7 +94,7 @@ class DeviceRepositoryImplTest {
 
         repository.signalQuality.test {
             val quality = awaitItem()
-            assertThat(quality.lastReceivedAt).isNotNull()
+            assertNotNull(quality.lastReceivedAt)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -105,15 +107,15 @@ class DeviceRepositoryImplTest {
 
         val result = repository.getDeviceById("d1")
 
-        assertThat(result.isSuccess).isTrue()
-        assertThat(result.getOrNull()?.id).isEqualTo("d1")
+        assertTrue(result.isSuccess)
+        assertEquals("d1", result.getOrNull()?.id)
     }
 
     @Test
     fun getDeviceById_notFound() = runTest {
         val result = repository.getDeviceById("missing")
 
-        assertThat(result.isFailure).isTrue()
+        assertTrue(result.isFailure)
     }
 
     // --- devices flow ---
@@ -124,15 +126,15 @@ class DeviceRepositoryImplTest {
 
         repository.devices.test {
             val devices = awaitItem()
-            assertThat(devices).hasSize(2)
-            assertThat(devices[0].id).isEqualTo("d1")
-            assertThat(devices[1].id).isEqualTo("d2")
+            assertEquals(2, devices.size)
+            assertEquals("d1", devices[0].id)
+            assertEquals("d2", devices[1].id)
             cancelAndIgnoreRemainingEvents()
         }
     }
 }
 
-// Simple in-memory DAO fakes to avoid MockK/Room annotation conflicts
+// Simple in-memory DAO fakes
 private class InMemoryDeviceDao(
     private val devicesFlow: MutableStateFlow<List<DeviceEntity>>
 ) : dev.esteki.ipulse.data.local.dao.DeviceDao {

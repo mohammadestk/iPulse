@@ -1,6 +1,8 @@
 package dev.esteki.ipulse.domain.model
 
-import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.test.Test
 
 class SensorTypeTest {
@@ -9,67 +11,67 @@ class SensorTypeTest {
 
     @Test
     fun fromTopic_temperatureKeyword() {
-        assertThat(SensorType.fromTopic("devicepulse/ward-b-bed-4/sensors/temp")).isEqualTo(SensorType.TEMPERATURE)
+        assertEquals(SensorType.TEMPERATURE, SensorType.fromTopic("devicepulse/ward-b-bed-4/sensors/temp"))
     }
 
     @Test
     fun fromTopic_temperatureFullWord() {
-        assertThat(SensorType.fromTopic("/esteki/devices/temperature")).isEqualTo(SensorType.TEMPERATURE)
+        assertEquals(SensorType.TEMPERATURE, SensorType.fromTopic("/esteki/devices/temperature"))
     }
 
     @Test
     fun fromTopic_pressureKeyword() {
-        assertThat(SensorType.fromTopic("devicepulse/ward-b/sensors/pressure")).isEqualTo(SensorType.PRESSURE)
+        assertEquals(SensorType.PRESSURE, SensorType.fromTopic("devicepulse/ward-b/sensors/pressure"))
     }
 
     @Test
     fun fromTopic_humidityKeyword() {
-        assertThat(SensorType.fromTopic("devicepulse/ward-b/sensors/humidity")).isEqualTo(SensorType.HUMIDITY)
+        assertEquals(SensorType.HUMIDITY, SensorType.fromTopic("devicepulse/ward-b/sensors/humidity"))
     }
 
     @Test
     fun fromTopic_caseInsensitive() {
-        assertThat(SensorType.fromTopic("/TEMP/reading")).isEqualTo(SensorType.TEMPERATURE)
-        assertThat(SensorType.fromTopic("/Pressure/reading")).isEqualTo(SensorType.PRESSURE)
-        assertThat(SensorType.fromTopic("/HUMIDITY/reading")).isEqualTo(SensorType.HUMIDITY)
+        assertEquals(SensorType.TEMPERATURE, SensorType.fromTopic("/TEMP/reading"))
+        assertEquals(SensorType.PRESSURE, SensorType.fromTopic("/Pressure/reading"))
+        assertEquals(SensorType.HUMIDITY, SensorType.fromTopic("/HUMIDITY/reading"))
     }
 
     @Test
     fun fromTopic_noMatch_returnsNull() {
-        assertThat(SensorType.fromTopic("/esteki/devices")).isNull()
-        assertThat(SensorType.fromTopic("")).isNull()
-        assertThat(SensorType.fromTopic("devicepulse/ward-b-bed-4/sensors/voltage")).isNull()
+        assertNull(SensorType.fromTopic("/esteki/devices"))
+        assertNull(SensorType.fromTopic(""))
+        assertNull(SensorType.fromTopic("devicepulse/ward-b-bed-4/sensors/voltage"))
     }
 
     @Test
     fun fromTopic_partialMatch_works() {
-        assertThat(SensorType.fromTopic("temperature-sensor")).isEqualTo(SensorType.TEMPERATURE)
-        assertThat(SensorType.fromTopic("barometric-pressure")).isEqualTo(SensorType.PRESSURE)
-        assertThat(SensorType.fromTopic("relative-humidity")).isEqualTo(SensorType.HUMIDITY)
+        assertEquals(SensorType.TEMPERATURE, SensorType.fromTopic("temperature-sensor"))
+        assertEquals(SensorType.PRESSURE, SensorType.fromTopic("barometric-pressure"))
+        assertEquals(SensorType.HUMIDITY, SensorType.fromTopic("relative-humidity"))
     }
 
     // --- enum properties ---
 
     @Test
     fun temperature_hasCorrectProperties() {
-        assertThat(SensorType.TEMPERATURE.displayName).isEqualTo("Temperature")
-        assertThat(SensorType.TEMPERATURE.unit).isEqualTo("°C")
+        assertEquals("Temperature", SensorType.TEMPERATURE.displayName)
+        assertEquals("°C", SensorType.TEMPERATURE.unit)
     }
 
     @Test
     fun pressure_hasCorrectProperties() {
-        assertThat(SensorType.PRESSURE.displayName).isEqualTo("Pressure")
-        assertThat(SensorType.PRESSURE.unit).isEqualTo("hPa")
+        assertEquals("Pressure", SensorType.PRESSURE.displayName)
+        assertEquals("hPa", SensorType.PRESSURE.unit)
     }
 
     @Test
     fun humidity_hasCorrectProperties() {
-        assertThat(SensorType.HUMIDITY.displayName).isEqualTo("Humidity")
-        assertThat(SensorType.HUMIDITY.unit).isEqualTo("%RH")
+        assertEquals("Humidity", SensorType.HUMIDITY.displayName)
+        assertEquals("%RH", SensorType.HUMIDITY.unit)
     }
 
     @Test
     fun enumHasThreeEntries() {
-        assertThat(SensorType.entries).hasSize(3)
+        assertEquals(3, SensorType.entries.size)
     }
 }

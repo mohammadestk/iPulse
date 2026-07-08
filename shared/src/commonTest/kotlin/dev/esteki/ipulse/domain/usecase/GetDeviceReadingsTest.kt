@@ -1,12 +1,11 @@
 package dev.esteki.ipulse.domain.usecase
 
 import app.cash.turbine.test
-import com.google.common.truth.Truth.assertThat
 import dev.esteki.ipulse.domain.model.SensorType
 import dev.esteki.ipulse.domain.model.TelemetryReading
-import dev.esteki.ipulse.domain.repository.DeviceRepository
-import io.mockk.every
-import io.mockk.mockk
+import dev.esteki.ipulse.domain.repository.FakeDeviceRepository
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.Test
 import kotlin.time.Instant
 import kotlinx.coroutines.flow.flowOf
@@ -14,7 +13,7 @@ import kotlinx.coroutines.test.runTest
 
 class GetDeviceReadingsTest {
 
-    private val repository = mockk<DeviceRepository>()
+    private val repository = FakeDeviceRepository()
     private val useCase = GetDeviceReadings(repository)
 
     private fun reading(value: Double) = TelemetryReading(
@@ -27,35 +26,33 @@ class GetDeviceReadingsTest {
 
     @Test
     fun returnsFlowFromRepository() = runTest {
-        every { repository.observeReadingsForDevice("device-1") } returns flowOf(listOf(reading(24.6)))
+        repository.setReadings("device-1", listOf(reading(24.6)))
 
         useCase("device-1").test {
             val emissions = awaitItem()
-            assertThat(emissions).hasSize(1)
-            assertThat(emissions[0].value).isEqualTo(24.6)
+            assertEquals(1, emissions.size)
+            assertEquals(24.6, emissions[0].value)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
     fun filtersByDeviceId() = runTest {
-        every { repository.observeReadingsForDevice("device-1") } returns flowOf(listOf(reading(10.0)))
-        every { repository.observeReadingsForDevice("device-2") } returns flowOf(listOf(reading(20.0)))
+        repository.setReadings("device-1", listOf(reading(10.0)))
+        repository.setReadings("device-2", listOf(reading(20.0)))
 
         useCase("device-1").test {
             val emissions = awaitItem()
-            assertThat(emissions).hasSize(1)
-            assertThat(emissions[0].value).isEqualTo(10.0)
+            assertEquals(1, emissions.size)
+            assertEquals(10.0, emissions[0].value)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
     fun returnsEmptyForUnknownDevice() = runTest {
-        every { repository.observeReadingsForDevice("nonexistent") } returns flowOf(emptyList())
-
         useCase("nonexistent").test {
-            assertThat(awaitItem()).isEmpty()
+            assertTrue(awaitItem().isEmpty())
             cancelAndIgnoreRemainingEvents()
         }
     }

@@ -1,6 +1,7 @@
 package dev.esteki.ipulse.data.service
 
-import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import dev.esteki.ipulse.data.local.dao.DeviceDao
 import dev.esteki.ipulse.data.local.dao.TelemetryReadingDao
 import dev.esteki.ipulse.data.local.entity.DeviceEntity
@@ -55,10 +56,10 @@ class TelemetryIngestionServiceTest {
         ))
         testScheduler.advanceUntilIdle()
 
-        assertThat(deviceDao.store).containsKey("ward-b-bed-4")
-        assertThat(deviceDao.store["ward-b-bed-4"]?.name).isEqualTo("Ward B")
-        assertThat(readingDao.readings).hasSize(1)
-        assertThat(readingDao.readings[0].value).isEqualTo(24.6)
+        assertTrue(deviceDao.store.containsKey("ward-b-bed-4"))
+        assertEquals("Ward B", deviceDao.store["ward-b-bed-4"]?.name)
+        assertEquals(1, readingDao.readings.size)
+        assertEquals(24.6, readingDao.readings[0].value)
     }
 
     @Test
@@ -76,8 +77,8 @@ class TelemetryIngestionServiceTest {
         ))
         testScheduler.advanceUntilIdle()
 
-        assertThat(deviceDao.store["d1"]?.name).isEqualTo("New Name")
-        assertThat(deviceDao.store["d1"]?.sensorType).isEqualTo("HUMIDITY")
+        assertEquals("New Name", deviceDao.store["d1"]?.name)
+        assertEquals("HUMIDITY", deviceDao.store["d1"]?.sensorType)
     }
 
     @Test
@@ -86,8 +87,8 @@ class TelemetryIngestionServiceTest {
         messages.emit(MqttMessage(topic = "/esteki/devices", payload = "not json"))
         testScheduler.advanceUntilIdle()
 
-        assertThat(deviceDao.store).isEmpty()
-        assertThat(readingDao.readings).isEmpty()
+        assertTrue(deviceDao.store.isEmpty())
+        assertTrue(readingDao.readings.isEmpty())
     }
 
     @Test
@@ -101,7 +102,7 @@ class TelemetryIngestionServiceTest {
         ))
         testScheduler.advanceUntilIdle()
 
-        assertThat(deviceDao.store).hasSize(1)
+        assertEquals(1, deviceDao.store.size)
     }
 
     @Test
@@ -115,7 +116,7 @@ class TelemetryIngestionServiceTest {
         ))
         testScheduler.advanceUntilIdle()
 
-        assertThat(deviceDao.store).isEmpty()
+        assertTrue(deviceDao.store.isEmpty())
     }
 }
 

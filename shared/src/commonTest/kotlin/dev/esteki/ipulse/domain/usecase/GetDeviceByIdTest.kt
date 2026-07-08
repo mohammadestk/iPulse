@@ -1,18 +1,17 @@
 package dev.esteki.ipulse.domain.usecase
 
-import com.google.common.truth.Truth.assertThat
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.Device
 import dev.esteki.ipulse.domain.model.SensorType
-import dev.esteki.ipulse.domain.repository.DeviceRepository
-import io.mockk.coEvery
-import io.mockk.mockk
+import dev.esteki.ipulse.domain.repository.FakeDeviceRepository
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.Test
 import kotlinx.coroutines.test.runTest
 
 class GetDeviceByIdTest {
 
-    private val repository = mockk<DeviceRepository>()
+    private val repository = FakeDeviceRepository()
     private val useCase = GetDeviceById(repository)
 
     private fun device(id: String = "device-1", name: String = "Test Device") = Device(
@@ -26,20 +25,18 @@ class GetDeviceByIdTest {
 
     @Test
     fun returnsDevice() = runTest {
-        coEvery { repository.getDeviceById("d1") } returns Result.success(device("d1", "Ward A"))
+        repository.setDevice(device("d1", "Ward A"))
 
         val result = useCase("d1")
 
-        assertThat(result.isSuccess).isTrue()
-        assertThat(result.getOrNull()?.name).isEqualTo("Ward A")
+        assertTrue(result.isSuccess)
+        assertEquals("Ward A", result.getOrNull()?.name)
     }
 
     @Test
     fun returnsFailureForUnknownDevice() = runTest {
-        coEvery { repository.getDeviceById("nonexistent") } returns Result.failure(Exception("Not found"))
-
         val result = useCase("nonexistent")
 
-        assertThat(result.isFailure).isTrue()
+        assertTrue(result.isFailure)
     }
 }

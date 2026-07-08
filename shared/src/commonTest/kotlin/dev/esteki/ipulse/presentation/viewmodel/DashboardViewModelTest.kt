@@ -1,12 +1,11 @@
 package dev.esteki.ipulse.presentation.viewmodel
 
 import app.cash.turbine.test
-import com.google.common.truth.Truth.assertThat
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.Device
 import dev.esteki.ipulse.domain.model.SensorType
-import dev.esteki.ipulse.domain.repository.BrokerConnection
-import dev.esteki.ipulse.domain.repository.DeviceRepository
+import dev.esteki.ipulse.domain.repository.FakeBrokerConnection
+import dev.esteki.ipulse.domain.repository.FakeDeviceRepository
 import dev.esteki.ipulse.domain.usecase.ConnectToBroker
 import dev.esteki.ipulse.domain.usecase.ObserveConnectionEvents
 import dev.esteki.ipulse.domain.usecase.ObserveConnectionState
@@ -17,14 +16,12 @@ import dev.esteki.ipulse.domain.usecase.SubscribeToDeviceTopic
 import dev.esteki.ipulse.presentation.screen.DashboardAction
 import dev.esteki.ipulse.presentation.screen.DashboardState
 import dev.esteki.ipulse.presentation.model.ConnectionStateUi
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.test.Test
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -38,8 +35,8 @@ class DashboardViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    private val repository = mockk<DeviceRepository>()
-    private val broker = mockk<BrokerConnection>()
+    private val repository = FakeDeviceRepository()
+    private val broker = FakeBrokerConnection()
 
     private val defaultState = DashboardState(
         devices = emptyList(),
@@ -58,13 +55,6 @@ class DashboardViewModelTest {
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        every { repository.devices } returns emptyFlow()
-        every { repository.signalQuality } returns emptyFlow()
-        every { repository.observeDevicesPaged() } returns emptyFlow()
-        every { broker.connectionState } returns emptyFlow()
-        every { broker.connectionEvents } returns emptyFlow()
-        coEvery { broker.connect(any(), any()) } returns Unit
-        coEvery { broker.subscribe(any()) } returns Unit
     }
 
     @AfterTest
@@ -87,8 +77,9 @@ class DashboardViewModelTest {
     fun autoConnect_connectsAndSubscribes() = runTest {
         createViewModel()
 
-        coVerify { broker.connect(any(), any()) }
-        coVerify { broker.subscribe("/esteki/devices") }
+        assertEquals(1, broker.connectCalls.size)
+        assertEquals(1, broker.subscribeCalls.size)
+        assertEquals("/esteki/devices", broker.subscribeCalls[0])
     }
 
     @Test
@@ -97,7 +88,7 @@ class DashboardViewModelTest {
 
         vm.onAction(DashboardAction.OnSearchQueryChange("ward"))
 
-        assertThat(vm.state.value.searchQuery).isEqualTo("ward")
+        assertEquals("ward", vm.state.value.searchQuery)
     }
 
     @Test
@@ -106,31 +97,31 @@ class DashboardViewModelTest {
 
         vm.onAction(DashboardAction.OnErrorDismissed)
 
-        assertThat(vm.state.value.errorMessage).isNull()
+        assertNull(vm.state.value.errorMessage)
     }
 
     @Test
     fun connectionState_updatesUi() = runTest {
-        every { broker.connectionState } returns flowOf(ConnectionState.Connected)
+        broker.setConnectionState(ConnectionState.Connected)
         val vm = createViewModel()
 
         vm.state.test {
             val state = awaitItem()
-            assertThat(state.connectionState.isConnected).isTrue()
-            assertThat(state.connectionState.displayName).isEqualTo("Connected")
+            assertTrue(state.connectionState.isConnected)
+            assertEquals("Connected", state.connectionState.displayName)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
     fun connectionState_reconnecting_updatesUi() = runTest {
-        every { broker.connectionState } returns flowOf(ConnectionState.Reconnecting)
+        broker.setConnectionState(ConnectionState.Reconnecting)
         val vm = createViewModel()
 
         vm.state.test {
             val state = awaitItem()
-            assertThat(state.connectionState.displayName).isEqualTo("Reconnecting")
-            assertThat(state.connectionState.isConnected).isFalse()
+            assertEquals("Reconnecting", state.connectionState.displayName)
+            assertTrue(!state.connectionState.isConnected)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -145,14 +136,14 @@ class DashboardViewModelTest {
             latestReading = null,
             connectionState = ConnectionState.Connected
         )
-        every { repository.devices } returns flowOf(listOf(device))
+        repository.setDevices(listOf(device))
         val vm = createViewModel()
 
         vm.state.test {
             val state = awaitItem()
-            assertThat(state.devices).hasSize(1)
-            assertThat(state.devices[0].id).isEqualTo("device-1")
-            assertThat(state.devices[0].name).isEqualTo("Ward B")
+            assertEquals(1, state.devices.size)
+            assertEquals("device-1", state.devices[0].id)
+            assertEquals("Ward B", state.devices[0].name)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -164,12 +155,12 @@ class DashboardViewModelTest {
             Device("d2", "Ward B", "/t", SensorType.HUMIDITY, null, ConnectionState.Connected),
             Device("d3", "Storage", "/t", SensorType.PRESSURE, null, ConnectionState.Connected)
         )
-        every { repository.devices } returns flowOf(devices)
+        repository.setDevices(devices)
         val vm = createViewModel()
 
         vm.onAction(DashboardAction.OnSearchQueryChange("ward"))
 
-        assertThat(vm.state.value.filteredDevices).hasSize(2)
+        assertEquals(2, vm.state.value.filteredDevices.size)
     }
 
     @Test
@@ -178,11 +169,11 @@ class DashboardViewModelTest {
             Device("d1", "Ward A", "/t", SensorType.TEMPERATURE, null, ConnectionState.Connected),
             Device("d2", "Storage", "/t", SensorType.HUMIDITY, null, ConnectionState.Connected)
         )
-        every { repository.devices } returns flowOf(devices)
+        repository.setDevices(devices)
         val vm = createViewModel()
 
         vm.onAction(DashboardAction.OnSearchQueryChange(""))
 
-        assertThat(vm.state.value.filteredDevices).hasSize(2)
+        assertEquals(2, vm.state.value.filteredDevices.size)
     }
 }

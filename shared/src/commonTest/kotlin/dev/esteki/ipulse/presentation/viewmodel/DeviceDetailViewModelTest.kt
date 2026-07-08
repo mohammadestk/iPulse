@@ -1,27 +1,24 @@
 package dev.esteki.ipulse.presentation.viewmodel
 
 import app.cash.turbine.test
-import com.google.common.truth.Truth.assertThat
-import dev.esteki.ipulse.domain.model.ConnectionEvent
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.SensorType
 import dev.esteki.ipulse.domain.model.SignalQuality
 import dev.esteki.ipulse.domain.model.Stability
 import dev.esteki.ipulse.domain.model.TelemetryReading
-import dev.esteki.ipulse.domain.repository.BrokerConnection
-import dev.esteki.ipulse.domain.repository.DeviceRepository
+import dev.esteki.ipulse.domain.repository.FakeBrokerConnection
+import dev.esteki.ipulse.domain.repository.FakeDeviceRepository
 import dev.esteki.ipulse.domain.usecase.GetDeviceReadings
 import dev.esteki.ipulse.domain.usecase.ObserveConnectionEvents
 import dev.esteki.ipulse.domain.usecase.ObserveDeviceById
 import dev.esteki.ipulse.domain.usecase.ObserveSignalQuality
 import dev.esteki.ipulse.presentation.screen.DeviceDetailState
-import io.mockk.every
-import io.mockk.mockk
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.Test
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -36,8 +33,8 @@ class DeviceDetailViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private val deviceId = "device-1"
 
-    private val repository = mockk<DeviceRepository>()
-    private val broker = mockk<BrokerConnection>()
+    private val repository = FakeDeviceRepository()
+    private val broker = FakeBrokerConnection()
 
     private val defaultState = DeviceDetailState(
         device = null,
@@ -59,10 +56,7 @@ class DeviceDetailViewModelTest {
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        every { repository.observeReadingsForDevice(any()) } returns emptyFlow()
-        every { repository.observeDeviceById(any()) } returns flowOf(null)
-        every { repository.signalQuality } returns flowOf(SignalQuality(0.0, Stability.NO_DATA))
-        every { broker.connectionEvents } returns emptyFlow()
+        repository.setSignalQuality(SignalQuality(0.0, Stability.NO_DATA))
     }
 
     @AfterTest
@@ -83,18 +77,18 @@ class DeviceDetailViewModelTest {
     fun initialState_hasEmptyReadings() = runTest {
         val vm = createViewModel()
 
-        assertThat(vm.state.value.readings).isEmpty()
+        assertTrue(vm.state.value.readings.isEmpty())
     }
 
     @Test
     fun readingsAppearWhenEmitted() = runTest {
-        every { repository.observeReadingsForDevice(deviceId) } returns flowOf(listOf(reading(24.6)))
+        repository.setReadings(deviceId, listOf(reading(24.6)))
         val vm = createViewModel()
 
         vm.state.test {
             val state = awaitItem()
-            assertThat(state.readings).hasSize(1)
-            assertThat(state.readings[0].value).isEqualTo(24.6)
+            assertEquals(1, state.readings.size)
+            assertEquals(24.6, state.readings[0].value)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -102,13 +96,13 @@ class DeviceDetailViewModelTest {
     @Test
     fun readingsAccumulate() = runTest {
         val readings = listOf(reading(10.0), reading(20.0), reading(30.0))
-        every { repository.observeReadingsForDevice(deviceId) } returns flowOf(readings)
+        repository.setReadings(deviceId, readings)
         val vm = createViewModel()
 
         vm.state.test {
             val state = awaitItem()
-            assertThat(state.readings).hasSize(3)
-            assertThat(state.readings[2].value).isEqualTo(30.0)
+            assertEquals(3, state.readings.size)
+            assertEquals(30.0, state.readings[2].value)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -116,12 +110,12 @@ class DeviceDetailViewModelTest {
     @Test
     fun readingsCappedAt100() = runTest {
         val manyReadings = (1..150).map { reading(it.toDouble()) }
-        every { repository.observeReadingsForDevice(deviceId) } returns flowOf(manyReadings)
+        repository.setReadings(deviceId, manyReadings)
         val vm = createViewModel()
 
         vm.state.test {
             val state = awaitItem()
-            assertThat(state.readings).hasSize(100)
+            assertEquals(100, state.readings.size)
             cancelAndIgnoreRemainingEvents()
         }
     }

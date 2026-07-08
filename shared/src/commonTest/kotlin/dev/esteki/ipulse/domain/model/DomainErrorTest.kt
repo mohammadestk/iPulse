@@ -1,6 +1,7 @@
 package dev.esteki.ipulse.domain.model
 
-import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.test.Test
 
 class DomainErrorTest {
@@ -9,7 +10,7 @@ class DomainErrorTest {
     fun connection_errorMessageContainsUrlAndPort() {
         val error = DomainError.Connection("Failed to connect to broker.mqtt.com:8081")
 
-        assertThat(error.message).isEqualTo("Failed to connect to broker.mqtt.com:8081")
+        assertEquals("Failed to connect to broker.mqtt.com:8081", error.message)
     }
 
     @Test
@@ -17,24 +18,24 @@ class DomainErrorTest {
         val cause = RuntimeException("timeout")
         val error = DomainError.Connection("Failed to connect", cause)
 
-        assertThat(error.cause).isEqualTo(cause)
-        assertThat(error.cause?.message).isEqualTo("timeout")
+        assertEquals(cause, error.cause)
+        assertEquals("timeout", error.cause?.message)
     }
 
     @Test
     fun deviceNotFound_errorMessageContainsDeviceId() {
         val error = DomainError.DeviceNotFound("ward-b-bed-4")
 
-        assertThat(error.message).isEqualTo("Device ward-b-bed-4 not found")
-        assertThat(error.deviceId).isEqualTo("ward-b-bed-4")
+        assertEquals("Device ward-b-bed-4 not found", error.message)
+        assertEquals("ward-b-bed-4", error.deviceId)
     }
 
     @Test
     fun subscription_errorMessageContainsTopic() {
         val error = DomainError.Subscription("/esteki/devices")
 
-        assertThat(error.message).isEqualTo("Failed to subscribe to /esteki/devices")
-        assertThat(error.topic).isEqualTo("/esteki/devices")
+        assertEquals("Failed to subscribe to /esteki/devices", error.message)
+        assertEquals("/esteki/devices", error.topic)
     }
 
     @Test
@@ -42,7 +43,7 @@ class DomainErrorTest {
         val cause = RuntimeException("network error")
         val error = DomainError.Subscription("/esteki/devices", cause)
 
-        assertThat(error.cause).isEqualTo(cause)
+        assertEquals(cause, error.cause)
     }
 
     @Test
@@ -50,8 +51,8 @@ class DomainErrorTest {
         val cause = RuntimeException("something broke")
         val error = DomainError.Unknown(cause)
 
-        assertThat(error.message).isEqualTo("something broke")
-        assertThat(error.cause).isEqualTo(cause)
+        assertEquals("something broke", error.message)
+        assertEquals(cause, error.cause)
     }
 
     @Test
@@ -59,7 +60,7 @@ class DomainErrorTest {
         val cause = RuntimeException()
         val error = DomainError.Unknown(cause)
 
-        assertThat(error.message).isNotEmpty()
+        assertTrue(!error.message.isNullOrEmpty())
     }
 
     @Test
@@ -69,9 +70,9 @@ class DomainErrorTest {
         val subscription: Throwable = DomainError.Subscription("x")
         val unknown: Throwable = DomainError.Unknown(RuntimeException())
 
-        assertThat(connection).isInstanceOf(DomainError::class.java)
-        assertThat(notFound).isInstanceOf(DomainError::class.java)
-        assertThat(subscription).isInstanceOf(DomainError::class.java)
-        assertThat(unknown).isInstanceOf(DomainError::class.java)
+        assertTrue(connection is DomainError)
+        assertTrue(notFound is DomainError)
+        assertTrue(subscription is DomainError)
+        assertTrue(unknown is DomainError)
     }
 }

@@ -1,9 +1,12 @@
 package dev.esteki.ipulse.data.model
 
-import com.google.common.truth.Truth.assertThat
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.SensorType
 import kotlinx.serialization.json.Json
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.test.Test
 import kotlin.time.Instant
 
@@ -22,14 +25,14 @@ class TelemetryPayloadMapperTest {
             """{"deviceId":"ward-b-bed-4","name":"Ward B — bed 4","sensorType":"temperature","value":24.6,"unit":"°C","timestamp":1700000000000,"status":"live"}"""
         )!!
 
-        assertThat(decoded.deviceId).isEqualTo("ward-b-bed-4")
-        assertThat(decoded.name).isEqualTo("Ward B — bed 4")
-        assertThat(decoded.sensorType).isEqualTo(SensorType.TEMPERATURE)
-        assertThat(decoded.connectionState).isEqualTo(ConnectionState.Connected)
-        assertThat(decoded.reading.value).isEqualTo(24.6)
-        assertThat(decoded.reading.sensorType.unit).isEqualTo("°C")
-        assertThat(decoded.reading.timestamp).isEqualTo(Instant.fromEpochMilliseconds(1_700_000_000_000))
-        assertThat(decoded.reading.topic).isEqualTo(topic)
+        assertEquals("ward-b-bed-4", decoded.deviceId)
+        assertEquals("Ward B — bed 4", decoded.name)
+        assertEquals(SensorType.TEMPERATURE, decoded.sensorType)
+        assertEquals(ConnectionState.Connected, decoded.connectionState)
+        assertEquals(24.6, decoded.reading.value)
+        assertEquals("°C", decoded.reading.sensorType.unit)
+        assertEquals(Instant.fromEpochMilliseconds(1_700_000_000_000), decoded.reading.timestamp)
+        assertEquals(topic, decoded.reading.topic)
     }
 
     @Test
@@ -38,8 +41,8 @@ class TelemetryPayloadMapperTest {
             """{"deviceId":"d","name":"n","sensorType":"pressure","value":1013.2,"status":"live"}"""
         )!!
 
-        assertThat(decoded.sensorType).isEqualTo(SensorType.PRESSURE)
-        assertThat(SensorType.PRESSURE.unit).isEqualTo("hPa")
+        assertEquals(SensorType.PRESSURE, decoded.sensorType)
+        assertEquals("hPa", SensorType.PRESSURE.unit)
     }
 
     @Test
@@ -48,7 +51,7 @@ class TelemetryPayloadMapperTest {
             """{"deviceId":"d","name":"n","sensorType":"temperature","value":19.4,"status":"live"}"""
         )!!
 
-        assertThat(decoded.reading.timestamp).isEqualTo(fixedNow)
+        assertEquals(fixedNow, decoded.reading.timestamp)
     }
 
     @Test
@@ -56,7 +59,7 @@ class TelemetryPayloadMapperTest {
         val decoded = decode(
             """{"deviceId":"d","name":"n","sensorType":"temperature","value":1.0,"status":"live"}"""
         )!!
-        assertThat(decoded.connectionState).isEqualTo(ConnectionState.Connected)
+        assertEquals(ConnectionState.Connected, decoded.connectionState)
     }
 
     @Test
@@ -64,7 +67,7 @@ class TelemetryPayloadMapperTest {
         val decoded = decode(
             """{"deviceId":"d","name":"n","sensorType":"temperature","value":1.0,"status":"reconnecting"}"""
         )!!
-        assertThat(decoded.connectionState).isEqualTo(ConnectionState.Reconnecting)
+        assertEquals(ConnectionState.Reconnecting, decoded.connectionState)
     }
 
     @Test
@@ -72,7 +75,7 @@ class TelemetryPayloadMapperTest {
         val decoded = decode(
             """{"deviceId":"d","name":"n","sensorType":"temperature","value":1.0,"status":"offline"}"""
         )!!
-        assertThat(decoded.connectionState).isEqualTo(ConnectionState.Disconnected)
+        assertEquals(ConnectionState.Disconnected, decoded.connectionState)
     }
 
     @Test
@@ -80,7 +83,7 @@ class TelemetryPayloadMapperTest {
         val decoded = decode(
             """{"deviceId":"d","name":"n","sensorType":"temperature","value":1.0,"status":"bogus"}"""
         )!!
-        assertThat(decoded.connectionState).isEqualTo(ConnectionState.Disconnected)
+        assertEquals(ConnectionState.Disconnected, decoded.connectionState)
     }
 
     @Test
@@ -88,7 +91,7 @@ class TelemetryPayloadMapperTest {
         val decoded = decode(
             """{"deviceId":"d","name":"n","sensorType":"HUMIDITY","value":61,"status":"live"}"""
         )!!
-        assertThat(decoded.sensorType).isEqualTo(SensorType.HUMIDITY)
+        assertEquals(SensorType.HUMIDITY, decoded.sensorType)
     }
 
     @Test
@@ -96,12 +99,12 @@ class TelemetryPayloadMapperTest {
         val fromTopic = decode(
             """{"deviceId":"d","name":"n","sensorType":"unknown","value":1.0,"status":"live"}"""
         )
-        assertThat(fromTopic?.sensorType).isEqualTo(SensorType.TEMPERATURE)
+        assertEquals(SensorType.TEMPERATURE, fromTopic?.sensorType)
 
         val noHint = json.decodeFromString<TelemetryPayload>(
             """{"deviceId":"d","name":"n","sensorType":"unknown","value":1.0,"status":"live"}"""
         ).toDecodedTelemetry("devicepulse/x/y", fixedNow)
-        assertThat(noHint).isNull()
+        assertNull(noHint)
     }
 
     @Test
@@ -109,7 +112,7 @@ class TelemetryPayloadMapperTest {
         val decoded = decode(
             """{"deviceId":"d","name":"n","sensorType":"temperature","value":1.0,"status":"live","extra":"ignored","qos":1}"""
         )!!
-        assertThat(decoded.deviceId).isEqualTo("d")
+        assertEquals("d", decoded.deviceId)
     }
 
     @Test
@@ -119,7 +122,7 @@ class TelemetryPayloadMapperTest {
         } catch (_: Exception) {
             null
         }
-        assertThat(result).isNull()
+        assertNull(result)
     }
 
     @Test
@@ -127,11 +130,11 @@ class TelemetryPayloadMapperTest {
         val decoded = decode(
             """{"deviceId":"loading-dock","name":"Loading dock","sensorType":"humidity","value":61,"unit":"%RH","timestamp":1720000000000,"status":"live"}"""
         )!!
-        assertThat(decoded.deviceId).isEqualTo("loading-dock")
-        assertThat(decoded.name).isEqualTo("Loading dock")
-        assertThat(decoded.sensorType).isEqualTo(SensorType.HUMIDITY)
-        assertThat(decoded.reading.value).isEqualTo(61.0)
-        assertThat(decoded.connectionState).isEqualTo(ConnectionState.Connected)
+        assertEquals("loading-dock", decoded.deviceId)
+        assertEquals("Loading dock", decoded.name)
+        assertEquals(SensorType.HUMIDITY, decoded.sensorType)
+        assertEquals(61.0, decoded.reading.value)
+        assertEquals(ConnectionState.Connected, decoded.connectionState)
     }
 
     @Test
@@ -139,8 +142,8 @@ class TelemetryPayloadMapperTest {
         val decoded = decode(
             """{"deviceId":"cold-storage-r2","name":"Cold storage — R2","sensorType":"temperature","value":-18.2,"unit":"°C","timestamp":1720000000000,"status":"reconnecting"}"""
         )!!
-        assertThat(decoded.reading.value).isEqualTo(-18.2)
-        assertThat(decoded.connectionState).isEqualTo(ConnectionState.Reconnecting)
-        assertThat(decoded.reading.value).isLessThan(0.0)
+        assertEquals(-18.2, decoded.reading.value)
+        assertEquals(ConnectionState.Reconnecting, decoded.connectionState)
+        assertTrue(decoded.reading.value < 0.0)
     }
 }
