@@ -46,9 +46,6 @@ class DeviceDetailViewModel(
                     _events.send(DeviceDetailEvent.NavigateBack)
                 }
             }
-            is DeviceDetailAction.OnRefreshClick -> {
-                _state.update { it.copy(errorMessage = null) }
-            }
             is DeviceDetailAction.OnErrorDismissed -> {
                 _state.update { it.copy(errorMessage = null) }
             }

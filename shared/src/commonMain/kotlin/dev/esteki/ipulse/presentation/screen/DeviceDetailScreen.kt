@@ -73,13 +73,6 @@ fun DeviceDetailScreen(
                         color = IPulseTheme.colors.textMuted
                     )
                 }
-                TextButton(onClick = { onAction(DeviceDetailAction.OnRefreshClick) }) {
-                    Text(
-                        text = "Refresh",
-                        style = IPulseTheme.typography.buttonLabel,
-                        color = IPulseTheme.colors.textMuted
-                    )
-                }
             }
 
             Text(
