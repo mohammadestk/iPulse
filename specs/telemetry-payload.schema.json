@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/esteki/iPulse/specs/telemetry-payload.schema.json",
+  "title": "Telemetry Payload",
+  "description": "Wire contract for a single sensor reading published to the iPulse MQTT broker. One message = one reading from one sensor stream, plus the stream's current connection status. This shape is derived from the fields the UI displays (see device-pulse-design-system.html) and is the single source of truth for device identity, display name, sensor type, value, and status — the MQTT topic is used only for subscription routing, not for parsing identity.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["deviceId", "name", "sensorType", "value", "status"],
+  "properties": {
+    "deviceId": {
+      "type": "string",
+      "description": "Stable key grouping one or more sensor streams under a physical device. A device that exposes multiple sensors (e.g. temperature and pressure) publishes separate messages with the same deviceId but different sensorType values. Must be non-empty.",
+      "minLength": 1,
+      "examples": ["ward-b-bed-4", "cold-storage-r2", "loading-dock"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable display name shown in dashboard rows and the detail screen. May be shared across sensor streams of the same device. Must be non-empty.",
+      "minLength": 1,
+      "examples": ["Ward B — bed 4", "Cold storage — R2", "Loading dock"]
+    },
+    "sensorType": {
+      "type": "string",
+      "description": "Sensor channel this reading belongs to. Matched case-insensitively by the consumer.",
+      "enum": ["temperature", "pressure", "humidity"]
+    },
+    "value": {
+      "type": "number",
+      "description": "The measured reading. Numeric only — never a string.",
+      "examples": [24.6, 1013.2, 61, -18.2]
+    },
+    "unit": {
+      "type": ["string", "null"],
+      "description": "Optional unit override. When omitted the consumer derives the unit from sensorType: temperature → °C, pressure → hPa, humidity → %RH.",
+      "examples": ["°C", "hPa", "%RH"]
+    },
+    "timestamp": {
+      "type": ["integer", "null"],
+      "description": "Optional epoch milliseconds at which the reading was taken. When omitted the consumer stamps the message with its receive time.",
+      "minimum": 0,
+      "examples": [1720000000000]
+    },
+    "status": {
+      "type": "string",
+      "description": "Connection status of the sensor stream at the moment of publishing. Drives the per-device connection chip in the UI: live → cyan 'live', reconnecting → amber 'reconnecting', offline → dim 'offline'.",
+      "enum": ["live", "reconnecting", "offline"]
+    }
+  },
+  "examples": [
+    {
+      "deviceId": "ward-b-bed-4",
+      "name": "Ward B — bed 4",
+      "sensorType": "temperature",
+      "value": 24.6,
+      "unit": "°C",
+      "timestamp": 1720000000000,
+      "status": "live"
+    },
+    {
+      "deviceId": "ward-b-bed-4",
+      "name": "Ward B — bed 4",
+      "sensorType": "pressure",
+      "value": 1013.2,
+      "unit": "hPa",
+      "timestamp": 1720000000000,
+      "status": "live"
+    },
+    {
+      "deviceId": "cold-storage-r2",
+      "name": "Cold storage — R2",
+      "sensorType": "temperature",
+      "value": -18.2,
+      "unit": "°C",
+      "timestamp": 1720000000000,
+      "status": "reconnecting"
+    },
+    {
+      "deviceId": "loading-dock",
+      "name": "Loading dock",
+      "sensorType": "humidity",
+      "value": 61,
+      "unit": "%RH",
+      "timestamp": 1720000000000,
+      "status": "live"
+    }
+  ]
+}

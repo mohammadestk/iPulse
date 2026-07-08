@@ -9,6 +9,7 @@ data class DeviceEntity(
     val name: String,
     val topic: String,
     val sensorType: String,
+    val connectionState: String,
     val latestReadingValue: Double?,
     val latestReadingTimestamp: Long?,
     val latestReadingTopic: String?

@@ -115,6 +115,22 @@
   }
   .mono-block .dim{ color: var(--text-dim); }
 
+  .payload-block{
+    font-family: var(--font-mono); font-size: 13px;
+    background: var(--panel-inset); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-panel); padding: 18px 20px; margin-top: 24px;
+    line-height: 1.75; letter-spacing: 0.01em; white-space: pre; overflow-x: auto;
+  }
+  .payload-block .key{ color: var(--amber); }
+  .payload-block .str{ color: var(--cyan); }
+  .payload-block .num{ color: #e9edf0; }
+  .payload-block .dim{ color: var(--text-dim); }
+  .payload-block .req{ color: var(--text-dim); font-size: 11px; }
+
+  .status-map{ display:grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-top: 24px; }
+  .status-cell{ background: var(--panel); border:1px solid var(--border-soft); border-radius: var(--radius-panel); padding: 18px; display:flex; flex-direction:column; gap:12px; }
+  .status-cell .status-json{ font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+
   .panel{ position: relative; background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius-panel); padding: 22px; }
   .bracket{ position: relative; }
   .bracket .bl, .bracket .br, .bracket .tl, .bracket .tr{
@@ -337,6 +353,7 @@
       <div class="comp-card">
         <div class="comp-label">Sensor readout</div>
         <div class="readout"><div class="label-row"><div class="label">Temperature</div><div class="chip connected"><span class="chip-dot"></span>Live</div></div><div class="value">24.6<span class="unit">°C</span></div></div>
+        <div class="hint">Value and Live chip are both payload-driven — the publisher sets <span style="font-family:var(--font-mono);color:var(--cyan);">"status"</span> on every reading.</div>
       </div>
 
       <div class="comp-card">
@@ -355,7 +372,38 @@
   </section>
 
   <section>
-    <div class="section-head"><span class="section-num">04</span><span class="section-title">Screens — Mobile</span></div>
+    <div class="section-head"><span class="section-num">04</span><span class="section-title">Payload contract</span></div>
+    <p class="section-desc">One MQTT message = one sensor reading, plus the stream's connection status. The payload is the source of truth for device identity, display name, sensor type, value, and status — the topic is used only for subscription routing, never for parsing identity. Defined as JSON Schema in <span style="font-family:var(--font-mono);color:var(--cyan);">telemetry-payload.schema.json</span>.</p>
+    <div class="payload-block">{
+  <span class="key">"deviceId"</span>: <span class="str">"ward-b-bed-4"</span>,        <span class="req">// required — groups sensors under one device</span>
+  <span class="key">"name"</span>: <span class="str">"Ward B — bed 4"</span>,        <span class="req">// required — shown in rows + detail</span>
+  <span class="key">"sensorType"</span>: <span class="str">"temperature"</span>,     <span class="req">// required — temperature | pressure | humidity</span>
+  <span class="key">"value"</span>: <span class="num">24.6</span>,                   <span class="req">// required — the reading (number)</span>
+  <span class="key">"unit"</span>: <span class="str">"°C"</span>,                    <span class="req">// optional — falls back to sensor-type unit</span>
+  <span class="key">"timestamp"</span>: <span class="num">1720000000000</span>,       <span class="req">// optional — epoch-ms, falls back to receive time</span>
+  <span class="key">"status"</span>: <span class="str">"live"</span>                  <span class="req">// required — live | reconnecting | offline</span>
+}</div>
+    <div class="status-map">
+      <div class="status-cell">
+        <div class="chip connected"><span class="chip-dot"></span>Live</div>
+        <div class="status-json">"status": "live"</div>
+        <div class="hint">Sensor is publishing actively. Cyan dot + nominal value.</div>
+      </div>
+      <div class="status-cell">
+        <div class="chip reconnecting"><span class="chip-dot"></span>Reconnecting</div>
+        <div class="status-json">"status": "reconnecting"</div>
+        <div class="hint">Stream lost, broker retrying. Amber blinking dot, last known value dimmed.</div>
+      </div>
+      <div class="status-cell">
+        <div class="chip disconnected"><span class="chip-dot"></span>Offline</div>
+        <div class="status-json">"status": "offline"</div>
+        <div class="hint">No data. Dim dot, value shown as last known or "—".</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">05</span><span class="section-title">Screens — Mobile</span></div>
     <p class="section-desc">Three states of the same dashboard: nominal, mid-incident, and the empty state before any device has been discovered.</p>
     <div class="screens-row">
 
@@ -419,7 +467,7 @@
   </section>
 
   <section>
-    <div class="section-head"><span class="section-num">05</span><span class="section-title">Screens — Desktop</span></div>
+    <div class="section-head"><span class="section-num">06</span><span class="section-title">Screens — Desktop</span></div>
     <p class="section-desc">Same domain model, same components — the desktop layout adds a sidebar and a persistent detail pane instead of full-screen navigation. No new visual vocabulary.</p>
     <div class="desktop-frame">
       <div class="desktop-titlebar"><div class="desktop-dot"></div><div class="desktop-dot"></div><div class="desktop-dot"></div><span style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin-left:8px;">Device Pulse — Desktop</span></div>
@@ -458,7 +506,7 @@
   </section>
 
   <section style="border-bottom:none;">
-    <div class="section-head"><span class="section-num">06</span><span class="section-title">The signature element</span></div>
+    <div class="section-head"><span class="section-num">07</span><span class="section-title">The signature element</span></div>
     <p class="section-desc" style="max-width:720px;">The signal trace is the one motif repeated everywhere a connection appears — dashboard header, per-device row, detail view, desktop panel. It's not decorative: a flat, tight line means stable; a jagged one means the connection is alive but unhealthy; a dashed flat line means no data at all. A user should be able to tell those three apart without reading a single word, the same way you'd read an oscilloscope.</p>
   </section>
 

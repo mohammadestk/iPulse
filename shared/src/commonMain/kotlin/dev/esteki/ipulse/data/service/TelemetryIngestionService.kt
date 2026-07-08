@@ -5,10 +5,9 @@ import dev.esteki.ipulse.data.local.dao.TelemetryReadingDao
 import dev.esteki.ipulse.data.local.mapper.toDomain
 import dev.esteki.ipulse.data.local.mapper.toEntity
 import dev.esteki.ipulse.data.model.TelemetryPayload
+import dev.esteki.ipulse.data.model.toDecodedTelemetry
 import dev.esteki.ipulse.data.remote.MqttClientBase
 import dev.esteki.ipulse.domain.model.Device
-import dev.esteki.ipulse.domain.model.SensorType
-import dev.esteki.ipulse.domain.model.TelemetryReading
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 class TelemetryIngestionService(
     private val mqttClient: MqttClientBase,
@@ -47,49 +45,31 @@ class TelemetryIngestionService(
     }
 
     private suspend fun processMessage(topic: String, payload: String) {
-        val sensorType = SensorType.fromTopic(topic) ?: return
-        val reading = parseReading(topic, payload, Clock.System.now()) ?: return
-        val deviceId = extractDeviceId(topic)
-
-        val device = deviceDao.getById(deviceId)?.toDomain()?.copy(latestReading = reading) ?: Device(
-            id = deviceId,
-            name = formatDeviceName(deviceId),
+        println("topic: $topic, payload: $payload")
+        val decoded = decodePayload(topic, payload) ?: return
+        val existing = deviceDao.getById(decoded.deviceId)?.toDomain()
+        val device = existing?.copy(
+            name = decoded.name,
+            sensorType = decoded.sensorType,
+            latestReading = decoded.reading,
+            connectionState = decoded.connectionState
+        ) ?: Device(
+            id = decoded.deviceId,
+            name = decoded.name,
             topic = topic,
-            sensorType = sensorType,
-            latestReading = reading
+            sensorType = decoded.sensorType,
+            latestReading = decoded.reading,
+            connectionState = decoded.connectionState
         )
 
         deviceDao.upsert(device.toEntity())
-        readingDao.insert(reading.toEntity(deviceId))
+        readingDao.insert(decoded.reading.toEntity(decoded.deviceId))
     }
 
-    private fun parseReading(topic: String, payload: String, now: Instant): TelemetryReading? {
-        val sensorType = SensorType.fromTopic(topic) ?: return null
-        val value = parseValue(payload) ?: return null
-        return TelemetryReading(
-            value = value,
-            sensorType = sensorType,
-            timestamp = now,
-            topic = topic
-        )
-    }
-
-    private fun parseValue(payload: String): Double? {
-        return try {
-            json.decodeFromString<TelemetryPayload>(payload).value
+    private fun decodePayload(topic: String, payload: String) =
+        try {
+            json.decodeFromString<TelemetryPayload>(payload).toDecodedTelemetry(topic)
         } catch (_: Exception) {
-            payload.trim().toDoubleOrNull()
+            null
         }
-    }
-
-    private fun extractDeviceId(topic: String): String {
-        val parts = topic.split("/")
-        return if (parts.size >= 2) parts[1] else topic
-    }
-
-    private fun formatDeviceName(deviceId: String): String {
-        return deviceId.replace("-", " ").split(" ").joinToString(" ") { word ->
-            word.replaceFirstChar { it.uppercase() }
-        }
-    }
 }

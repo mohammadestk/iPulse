@@ -15,4 +15,5 @@ actual fun databaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     return Room.databaseBuilder<AppDatabase>(name = ctx.getDatabasePath("app_databases.db").absolutePath)
         .setDriver(BundledSQLiteDriver())
         .setQueryCoroutineContext(Dispatchers.IO)
+        .fallbackToDestructiveMigration(dropAllTables = true)
 }

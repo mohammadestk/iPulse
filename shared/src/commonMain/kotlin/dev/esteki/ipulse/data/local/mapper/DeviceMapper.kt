@@ -24,7 +24,7 @@ fun DeviceEntity.toDomain(): Device {
         topic = topic,
         sensorType = sensorType,
         latestReading = latestReading,
-        connectionState = ConnectionState.Disconnected
+        connectionState = mapConnectionState(connectionState)
     )
 }
 
@@ -33,7 +33,22 @@ fun Device.toEntity(): DeviceEntity = DeviceEntity(
     name = name,
     topic = topic,
     sensorType = sensorType.name,
+    connectionState = connectionState.toStateName(),
     latestReadingValue = latestReading?.value,
     latestReadingTimestamp = latestReading?.timestamp?.toEpochMilliseconds(),
     latestReadingTopic = latestReading?.topic
 )
+
+private fun mapConnectionState(raw: String): ConnectionState = when (raw) {
+    ConnectionState.Connected::class.simpleName -> ConnectionState.Connected
+    ConnectionState.Reconnecting::class.simpleName -> ConnectionState.Reconnecting
+    ConnectionState.Disconnected::class.simpleName -> ConnectionState.Disconnected
+    else -> ConnectionState.Disconnected
+}
+
+private fun ConnectionState.toStateName(): String = when (this) {
+    is ConnectionState.Connected -> ConnectionState.Connected::class.simpleName!!
+    is ConnectionState.Reconnecting -> ConnectionState.Reconnecting::class.simpleName!!
+    is ConnectionState.Disconnected -> ConnectionState.Disconnected::class.simpleName!!
+    else -> ConnectionState.Disconnected::class.simpleName!!
+}

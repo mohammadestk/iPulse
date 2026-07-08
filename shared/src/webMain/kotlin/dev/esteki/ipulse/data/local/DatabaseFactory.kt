@@ -9,4 +9,5 @@ import kotlinx.coroutines.Dispatchers
 actual fun databaseBuilder(): RoomDatabase.Builder<AppDatabase> {
     return Room.databaseBuilder<AppDatabase>(name = "app_database.db")
         .setDriver(createSQLiteWasmWorker())
+        .fallbackToDestructiveMigration(dropAllTables = true)
 }
