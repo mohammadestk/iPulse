@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class KempMqttClient : dev.esteki.ipulse.data.remote.MqttClient {
+class KempMqttClientBase : MqttClientBase {
 
     private val _messages = MutableSharedFlow<MqttMessage>(extraBufferCapacity = 64)
     override val messages: SharedFlow<MqttMessage> = _messages.asSharedFlow()

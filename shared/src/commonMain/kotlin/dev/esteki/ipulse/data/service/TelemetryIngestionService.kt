@@ -5,7 +5,7 @@ import dev.esteki.ipulse.data.local.dao.TelemetryReadingDao
 import dev.esteki.ipulse.data.local.mapper.toDomain
 import dev.esteki.ipulse.data.local.mapper.toEntity
 import dev.esteki.ipulse.data.model.TelemetryPayload
-import dev.esteki.ipulse.data.remote.MqttClient
+import dev.esteki.ipulse.data.remote.MqttClientBase
 import dev.esteki.ipulse.domain.model.Device
 import dev.esteki.ipulse.domain.model.SensorType
 import dev.esteki.ipulse.domain.model.TelemetryReading
@@ -21,7 +21,7 @@ import kotlin.time.Clock
 import kotlin.time.Instant
 
 class TelemetryIngestionService(
-    private val mqttClient: MqttClient,
+    private val mqttClient: MqttClientBase,
     private val deviceDao: DeviceDao,
     private val readingDao: TelemetryReadingDao,
     private val json: Json

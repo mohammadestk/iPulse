@@ -1,6 +1,6 @@
 package dev.esteki.ipulse.data.repository
 
-import dev.esteki.ipulse.data.remote.MqttClient
+import dev.esteki.ipulse.data.remote.MqttClientBase
 import dev.esteki.ipulse.domain.model.ConnectionEvent
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.EventType
@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.math.pow
 
 class BrokerConnectionImpl(
-    private val mqttClient: MqttClient
+    private val mqttClient: MqttClientBase
 ) : BrokerConnection {
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
