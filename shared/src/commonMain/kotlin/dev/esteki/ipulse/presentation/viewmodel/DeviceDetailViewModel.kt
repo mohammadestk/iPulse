@@ -2,8 +2,8 @@ package dev.esteki.ipulse.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.esteki.ipulse.domain.usecase.GetDeviceById
 import dev.esteki.ipulse.domain.usecase.ObserveConnectionEvents
+import dev.esteki.ipulse.domain.usecase.ObserveDeviceById
 import dev.esteki.ipulse.domain.usecase.ObserveSignalQuality
 import dev.esteki.ipulse.presentation.model.toConnectionEventUi
 import dev.esteki.ipulse.presentation.model.toDeviceUi
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 class DeviceDetailViewModel(
     private val deviceId: String,
-    private val getDeviceById: GetDeviceById,
+    private val observeDeviceById: ObserveDeviceById,
     private val observeConnectionEvents: ObserveConnectionEvents,
     private val observeSignalQuality: ObserveSignalQuality
 ) : ViewModel() {
@@ -29,7 +29,7 @@ class DeviceDetailViewModel(
     val events = _events.receiveAsFlow()
 
     init {
-        loadDevice()
+        observeDevice()
         collectConnectionEvents()
         collectSignalQuality()
     }
@@ -43,7 +43,6 @@ class DeviceDetailViewModel(
             }
             is DeviceDetailAction.OnRefreshClick -> {
                 _state.update { it.copy(errorMessage = null) }
-                loadDevice()
             }
             is DeviceDetailAction.OnErrorDismissed -> {
                 _state.update { it.copy(errorMessage = null) }
@@ -51,28 +50,26 @@ class DeviceDetailViewModel(
         }
     }
 
-    private fun loadDevice() {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            getDeviceById(deviceId)
-                .onSuccess { device ->
-                    _state.update {
-                        it.copy(
-                            device = device.toDeviceUi(),
-                            isLoading = false
-                        )
-                    }
+    private fun observeDevice() {
+        observeDeviceById(deviceId)
+            .onEach { device ->
+                _state.update {
+                    it.copy(
+                        device = device?.toDeviceUi(),
+                        isLoading = false
+                    )
                 }
-                .onFailure { error ->
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = error.message ?: "Failed to load device"
-                        )
-                    }
-                    _events.send(DeviceDetailEvent.ShowError(error.message ?: "Failed to load device"))
+            }
+            .catch { error ->
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = error.message ?: "Failed to load device"
+                    )
                 }
-        }
+                _events.send(DeviceDetailEvent.ShowError(error.message ?: "Failed to load device"))
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun collectConnectionEvents() {

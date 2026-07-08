@@ -27,6 +27,10 @@ class DeviceRepositoryImpl(
         computeSignalQuality(entities)
     }
 
+    override fun observeDeviceById(id: String): Flow<Device?> = deviceDao.observeById(id).map { entity ->
+        entity?.toDomain()
+    }
+
     override suspend fun getDeviceById(id: String): Result<Device> {
         return try {
             val entity = deviceDao.getById(id)

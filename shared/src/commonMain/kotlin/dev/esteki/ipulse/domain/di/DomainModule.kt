@@ -13,4 +13,5 @@ val domainModule = module {
     factory { ObserveSignalQuality(deviceRepository = get()) }
     factory { GetDeviceById(deviceRepository = get()) }
     factory { GetDeviceReadings(deviceRepository = get()) }
+    factory { ObserveDeviceById(deviceRepository = get()) }
 }

@@ -18,6 +18,9 @@ interface DeviceDao {
     @Query("SELECT * FROM devices WHERE id = :id")
     suspend fun getById(id: String): DeviceEntity?
 
+    @Query("SELECT * FROM devices WHERE id = :id")
+    fun observeById(id: String): Flow<DeviceEntity?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(device: DeviceEntity)
 }
