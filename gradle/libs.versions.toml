@@ -25,6 +25,7 @@ ksp = "2.3.9"
 room = "3.0.0"
 sqlite = "2.7.0"
 koin-plugin = "1.0.1"
+paging = "3.5.0"
 
 [libraries]
 
@@ -71,6 +72,10 @@ koin-compose-navigation3 = { module = "io.insert-koin:koin-compose-navigation3",
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koin" }
 navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
+
+androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+androidx-room3-paging = { module = "androidx.room3:room3-paging", version.ref = "room" }
 mqtt-client-bom = { module = "org.meshtastic:mqtt-client-bom", version.ref = "mqttClientBom" }
 mqtt-client-core = { module = "org.meshtastic:mqtt-client-core", version.ref = "mqttClientBom" }
 mqtt-client-transport-ws = { module = "org.meshtastic:mqtt-client-transport-ws", version.ref = "mqttClientBom" }

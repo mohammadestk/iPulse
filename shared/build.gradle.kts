@@ -82,6 +82,9 @@ kotlin {
             implementation(libs.koin.annotations)
             implementation(libs.navigation3.ui)
             implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.paging.common)
+            implementation(libs.androidx.paging.compose)
+            implementation(libs.androidx.room3.paging)
         }
         jvmMain.dependencies {
             implementation(libs.androidx.sqlite.bundled)

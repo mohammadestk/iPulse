@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import dev.esteki.ipulse.domain.config.BrokerConfig
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.presentation.component.ConnectionChip
@@ -44,6 +46,7 @@ fun DashboardRoot(
     viewModel: DashboardViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val lazyPagingItems = viewModel.pagedDevices.collectAsLazyPagingItems<DeviceUi>()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -57,6 +60,7 @@ fun DashboardRoot(
 
     DashboardScreen(
         state = state,
+        lazyPagingItems = lazyPagingItems,
         snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction
     )
@@ -65,6 +69,7 @@ fun DashboardRoot(
 @Composable
 fun DashboardScreen(
     state: DashboardState,
+    lazyPagingItems: LazyPagingItems<DeviceUi>,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onAction: (DashboardAction) -> Unit
 ) {
@@ -125,18 +130,39 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (state.filteredDevices.isEmpty()) {
-                EmptyState()
+            if (state.searchQuery.isBlank()) {
+                if (lazyPagingItems.itemCount == 0) {
+                    EmptyState()
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(count = lazyPagingItems.itemCount) { index ->
+                            val device = lazyPagingItems[index]
+                            device?.let {
+                                DeviceRow(
+                                    device = it,
+                                    onClick = { onAction(DashboardAction.OnDeviceClick(it.id)) }
+                                )
+                            }
+                        }
+                    }
+                }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(state.filteredDevices, key = { it.id }) { device ->
-                        DeviceRow(
-                            device = device,
-                            onClick = { onAction(DashboardAction.OnDeviceClick(device.id)) }
-                        )
+                if (state.filteredDevices.isEmpty()) {
+                    EmptyState()
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(state.filteredDevices, key = { it.id }) { device ->
+                            DeviceRow(
+                                device = device,
+                                onClick = { onAction(DashboardAction.OnDeviceClick(device.id)) }
+                            )
+                        }
                     }
                 }
             }

@@ -14,4 +14,5 @@ val domainModule = module {
     factory { GetDeviceById(deviceRepository = get()) }
     factory { GetDeviceReadings(deviceRepository = get()) }
     factory { ObserveDeviceById(deviceRepository = get()) }
+    factory { ObserveDevicesPaged(deviceRepository = get()) }
 }

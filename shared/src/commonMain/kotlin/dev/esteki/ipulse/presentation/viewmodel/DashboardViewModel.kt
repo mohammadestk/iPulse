@@ -2,8 +2,12 @@ package dev.esteki.ipulse.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.map
 import dev.esteki.ipulse.domain.config.BrokerConfig
 import dev.esteki.ipulse.domain.usecase.*
+import dev.esteki.ipulse.presentation.model.DeviceUi
 import dev.esteki.ipulse.presentation.model.toConnectionEventUi
 import dev.esteki.ipulse.presentation.model.toConnectionStateUi
 import dev.esteki.ipulse.presentation.model.toDeviceUi
@@ -20,6 +24,7 @@ class DashboardViewModel(
     private val connectToBroker: ConnectToBroker,
     private val subscribeToDeviceTopic: SubscribeToDeviceTopic,
     private val observeTelemetry: ObserveTelemetry,
+    private val observeDevicesPaged: ObserveDevicesPaged,
     private val observeConnectionState: ObserveConnectionState,
     private val observeConnectionEvents: ObserveConnectionEvents,
     private val observeSignalQuality: ObserveSignalQuality
@@ -30,6 +35,10 @@ class DashboardViewModel(
 
     private val _events = Channel<DashboardEvent>()
     val events = _events.receiveAsFlow()
+
+    val pagedDevices: Flow<PagingData<DeviceUi>> = observeDevicesPaged()
+        .map { pagingData -> pagingData.map { device -> device.toDeviceUi() } }
+        .cachedIn(viewModelScope)
 
     init {
         collectConnectionState()

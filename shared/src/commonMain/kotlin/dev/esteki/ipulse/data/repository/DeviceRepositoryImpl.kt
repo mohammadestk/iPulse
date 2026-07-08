@@ -1,5 +1,9 @@
 package dev.esteki.ipulse.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import dev.esteki.ipulse.data.local.dao.DeviceDao
 import dev.esteki.ipulse.data.local.dao.TelemetryReadingDao
 import dev.esteki.ipulse.data.local.mapper.toDomain
@@ -50,6 +54,16 @@ class DeviceRepositoryImpl(
             Result.success(readings)
         } catch (e: Exception) {
             Result.failure(DomainError.Unknown(e))
+        }
+    }
+
+    override fun observeDevicesPaged(): Flow<PagingData<Device>> {
+        return Pager(
+            config = PagingConfig(pageSize = 25)
+        ) {
+            deviceDao.observePagingSource()
+        }.flow.map { pagingData ->
+            pagingData.map { entity -> entity.toDomain() }
         }
     }
 
