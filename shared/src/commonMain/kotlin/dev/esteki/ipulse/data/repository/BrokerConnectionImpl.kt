@@ -56,6 +56,7 @@ class BrokerConnectionImpl(
                 reconnectAttempt = 0
                 reconnectJob?.cancel()
                 reconnectJob = null
+                telemetryIngestionService.start()
                 _connectionEvents.emit(
                     ConnectionEvent(timestamp = now, type = EventType.CONNECTED, message = "Connected")
                 )
@@ -70,6 +71,7 @@ class BrokerConnectionImpl(
             ConnectionState.Disconnected -> {
                 reconnectJob?.cancel()
                 reconnectJob = null
+                telemetryIngestionService.close()
                 _connectionEvents.emit(
                     ConnectionEvent(timestamp = now, type = EventType.DISCONNECTED, message = "Disconnected")
                 )

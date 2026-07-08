@@ -26,14 +26,17 @@ class TelemetryIngestionService(
     private val readingDao: TelemetryReadingDao,
     private val json: Json
 ) {
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var scope: CoroutineScope? = null
 
-    init {
-        scope.launch { ingest() }
+    fun start() {
+        if (scope != null) return
+        scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+        scope!!.launch { ingest() }
     }
 
     fun close() {
-        scope.cancel()
+        scope?.cancel()
+        scope = null
     }
 
     private suspend fun ingest() {
