@@ -11,6 +11,7 @@ fun DeviceEntity.toDomain(): Device {
     val sensorType = SensorType.entries.find { it.name == sensorType } ?: SensorType.TEMPERATURE
     val latestReading = if (latestReadingValue != null && latestReadingTimestamp != null) {
         TelemetryReading(
+            id = 0,
             value = latestReadingValue,
             sensorType = sensorType,
             timestamp = Instant.fromEpochMilliseconds(latestReadingTimestamp),

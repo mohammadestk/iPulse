@@ -32,6 +32,7 @@ fun TelemetryPayload.toDecodedTelemetry(topic: String, now: Instant = Clock.Syst
     val connectionState = mapStatus(status)
     val timestamp = this.timestamp?.let { Instant.fromEpochMilliseconds(it) } ?: now
     val reading = TelemetryReading(
+        id = 0,
         value = value,
         sensorType = sensorType,
         timestamp = timestamp,

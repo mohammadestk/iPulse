@@ -48,12 +48,9 @@ class DeviceRepositoryImpl(
         }
     }
 
-    override suspend fun getReadingsForDevice(deviceId: String): Result<List<TelemetryReading>> {
-        return try {
-            val readings = readingDao.getByDeviceId(deviceId).map { it.toDomain() }
-            Result.success(readings)
-        } catch (e: Exception) {
-            Result.failure(DomainError.Unknown(e))
+    override fun observeReadingsForDevice(deviceId: String): Flow<List<TelemetryReading>> {
+        return readingDao.observeByDeviceId(deviceId).map { entities ->
+            entities.map { it.toDomain() }
         }
     }
 

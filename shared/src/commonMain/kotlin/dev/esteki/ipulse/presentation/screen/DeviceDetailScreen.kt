@@ -105,27 +105,46 @@ fun DeviceDetailScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Text(
-                text = "Connection log",
-                style = IPulseTheme.typography.dataSmall,
-                color = IPulseTheme.colors.textPrimary
-            )
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                if (state.readings.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Readings",
+                            style = IPulseTheme.typography.dataSmall,
+                            color = IPulseTheme.colors.textPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    items(state.readings, key = {it.value}) { reading ->
+                        ReadingRow(reading = reading)
+                    }
+                    item { Spacer(modifier = Modifier.height(20.dp)) }
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (state.connectionEvents.isEmpty()) {
-                Text(
-                    text = "No connection events yet",
-                    style = IPulseTheme.typography.caption,
-                    color = IPulseTheme.colors.textDim
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
-                ) {
+                if (state.connectionEvents.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Connection log",
+                            style = IPulseTheme.typography.dataSmall,
+                            color = IPulseTheme.colors.textPrimary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                     items(state.connectionEvents) { event ->
                         ConnectionEventRow(event = event)
+                    }
+                }
+
+                if (state.readings.isEmpty() && state.connectionEvents.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No data yet",
+                            style = IPulseTheme.typography.caption,
+                            color = IPulseTheme.colors.textDim
+                        )
                     }
                 }
             }
@@ -213,6 +232,28 @@ private fun ConnectionEventRow(event: ConnectionEventUi) {
             text = event.message,
             style = IPulseTheme.typography.caption,
             color = IPulseTheme.colors.textMuted
+        )
+    }
+    HorizontalDivider(color = IPulseTheme.colors.borderSoft)
+}
+
+@Composable
+private fun ReadingRow(reading: ReadingUi) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = reading.formattedTime,
+            style = IPulseTheme.typography.monoMicro,
+            color = IPulseTheme.colors.textDim
+        )
+        Text(
+            text = reading.value.toString(),
+            style = IPulseTheme.typography.dataSmall,
+            color = IPulseTheme.colors.textPrimary
         )
     }
     HorizontalDivider(color = IPulseTheme.colors.borderSoft)

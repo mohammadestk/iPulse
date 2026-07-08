@@ -11,7 +11,7 @@ import dev.esteki.ipulse.data.local.entity.TelemetryReadingEntity
 
 @Database(
     entities = [DeviceEntity::class, TelemetryReadingEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @ConstructedBy(AppDatabaseConstructor::class)

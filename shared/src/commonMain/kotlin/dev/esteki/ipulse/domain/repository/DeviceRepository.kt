@@ -12,6 +12,6 @@ interface DeviceRepository {
 
     fun observeDeviceById(id: String): Flow<Device?>
     suspend fun getDeviceById(id: String): Result<Device>
-    suspend fun getReadingsForDevice(deviceId: String): Result<List<TelemetryReading>>
+    fun observeReadingsForDevice(deviceId: String): Flow<List<TelemetryReading>>
     fun observeDevicesPaged(): Flow<PagingData<Device>>
 }

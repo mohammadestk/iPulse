@@ -7,16 +7,11 @@ import androidx.room3.PrimaryKey
 
 @Entity(
     tableName = "telemetry_readings",
-    foreignKeys = [ForeignKey(
-        entity = DeviceEntity::class,
-        parentColumns = ["id"],
-        childColumns = ["deviceId"],
-        onDelete = ForeignKey.CASCADE
-    )],
     indices = [Index("deviceId"), Index("timestamp")]
 )
 data class TelemetryReadingEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
     val deviceId: String,
     val value: Double,
     val sensorType: String,

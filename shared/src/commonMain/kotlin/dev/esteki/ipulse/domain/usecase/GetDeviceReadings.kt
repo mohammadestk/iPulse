@@ -2,11 +2,12 @@ package dev.esteki.ipulse.domain.usecase
 
 import dev.esteki.ipulse.domain.model.TelemetryReading
 import dev.esteki.ipulse.domain.repository.DeviceRepository
+import kotlinx.coroutines.flow.Flow
 
 class GetDeviceReadings(
     private val deviceRepository: DeviceRepository
 ) {
-    suspend operator fun invoke(deviceId: String): Result<List<TelemetryReading>> {
-        return deviceRepository.getReadingsForDevice(deviceId)
+    operator fun invoke(deviceId: String): Flow<List<TelemetryReading>> {
+        return deviceRepository.observeReadingsForDevice(deviceId)
     }
 }

@@ -3,6 +3,7 @@ package dev.esteki.ipulse.domain.model
 import kotlin.time.Instant
 
 data class TelemetryReading(
+    val id: Long,
     val value: Double,
     val sensorType: SensorType,
     val timestamp: Instant,

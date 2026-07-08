@@ -8,6 +8,7 @@ import kotlin.time.Instant
 fun TelemetryReadingEntity.toDomain(): TelemetryReading {
     val sensorType = SensorType.entries.find { it.name == sensorType } ?: SensorType.TEMPERATURE
     return TelemetryReading(
+        id = id,
         value = value,
         sensorType = sensorType,
         timestamp = Instant.fromEpochMilliseconds(timestamp),

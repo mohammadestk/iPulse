@@ -45,7 +45,6 @@ class TelemetryIngestionService(
     }
 
     private suspend fun processMessage(topic: String, payload: String) {
-        println("topic: $topic, payload: $payload")
         val decoded = decodePayload(topic, payload) ?: return
         val existing = deviceDao.getById(decoded.deviceId)?.toDomain()
         val device = existing?.copy(

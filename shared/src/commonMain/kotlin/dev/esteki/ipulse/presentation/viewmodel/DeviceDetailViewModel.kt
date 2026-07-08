@@ -2,9 +2,11 @@ package dev.esteki.ipulse.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.esteki.ipulse.domain.usecase.GetDeviceReadings
 import dev.esteki.ipulse.domain.usecase.ObserveConnectionEvents
 import dev.esteki.ipulse.domain.usecase.ObserveDeviceById
 import dev.esteki.ipulse.domain.usecase.ObserveSignalQuality
+import dev.esteki.ipulse.presentation.model.toReadingUi
 import dev.esteki.ipulse.presentation.model.toConnectionEventUi
 import dev.esteki.ipulse.presentation.model.toDeviceUi
 import dev.esteki.ipulse.presentation.model.toSignalQualityUi
@@ -20,7 +22,8 @@ class DeviceDetailViewModel(
     private val deviceId: String,
     private val observeDeviceById: ObserveDeviceById,
     private val observeConnectionEvents: ObserveConnectionEvents,
-    private val observeSignalQuality: ObserveSignalQuality
+    private val observeSignalQuality: ObserveSignalQuality,
+    private val getDeviceReadings: GetDeviceReadings
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(deviceDetailState)
@@ -31,6 +34,7 @@ class DeviceDetailViewModel(
 
     init {
         observeDevice()
+        observeReadings()
         collectConnectionEvents()
         collectSignalQuality()
     }
@@ -70,6 +74,17 @@ class DeviceDetailViewModel(
                 }
                 _events.send(DeviceDetailEvent.ShowError(error.message ?: "Failed to load device"))
             }
+            .launchIn(viewModelScope)
+    }
+
+    private fun observeReadings() {
+        getDeviceReadings(deviceId)
+            .onEach { readings ->
+                _state.update {
+                    it.copy(readings = readings.map { r -> r.toReadingUi() }.take(100))
+                }
+            }
+            .catch { /* Readings observe failed */ }
             .launchIn(viewModelScope)
     }
 
