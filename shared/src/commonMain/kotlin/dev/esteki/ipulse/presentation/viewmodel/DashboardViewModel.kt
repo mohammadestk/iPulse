@@ -51,7 +51,7 @@ class DashboardViewModel(
     private fun autoConnect() {
         viewModelScope.launch {
             connectToBroker(BrokerConfig.HOST, BrokerConfig.PORT)
-                .onSuccess { subscribeToDeviceTopic("#") }
+                .onSuccess { subscribeToDeviceTopic("/esteki/devices") }
                 .onFailure { error ->
                     _state.update { it.copy(errorMessage = error.message ?: "Connection failed") }
                     _events.send(DashboardEvent.ShowError(error.message ?: "Connection failed"))
