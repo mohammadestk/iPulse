@@ -2,7 +2,7 @@ package dev.esteki.ipulse.data.di
 
 import dev.esteki.ipulse.data.local.AppDatabase
 import dev.esteki.ipulse.data.local.databaseBuilder
-import dev.esteki.ipulse.data.remote.KempMqttClientBase
+import dev.esteki.ipulse.data.remote.KempMqttClient
 import dev.esteki.ipulse.data.remote.MqttClientBase
 import dev.esteki.ipulse.data.repository.BrokerConnectionImpl
 import dev.esteki.ipulse.data.repository.DeviceRepositoryImpl
@@ -25,7 +25,7 @@ val dataModule = module {
     }
 
     single<MqttClientBase> {
-        KempMqttClientBase()
+        KempMqttClient()
     }
 
     single<BrokerConnection> {
