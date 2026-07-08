@@ -57,7 +57,6 @@ class TelemetryIngestionService(
         )
 
         deviceDao.upsert(device.toEntity())
-        println(reading)
         readingDao.insert(reading.toEntity(deviceId))
     }
 

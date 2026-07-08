@@ -29,7 +29,7 @@ val dataModule = module {
     }
 
     single<BrokerConnection> {
-        BrokerConnectionImpl(mqttClient = get())
+        BrokerConnectionImpl(mqttClient = get(), telemetryIngestionService = get())
     }
 
     single<DeviceRepository> {

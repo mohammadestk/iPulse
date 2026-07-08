@@ -1,6 +1,7 @@
 package dev.esteki.ipulse.data.repository
 
 import dev.esteki.ipulse.data.remote.MqttClientBase
+import dev.esteki.ipulse.data.service.TelemetryIngestionService
 import dev.esteki.ipulse.domain.model.ConnectionEvent
 import dev.esteki.ipulse.domain.model.ConnectionState
 import dev.esteki.ipulse.domain.model.EventType
@@ -23,7 +24,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.math.pow
 
 class BrokerConnectionImpl(
-    private val mqttClient: MqttClientBase
+    private val mqttClient: MqttClientBase,
+    private val telemetryIngestionService: TelemetryIngestionService
 ) : BrokerConnection {
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
@@ -38,10 +40,6 @@ class BrokerConnectionImpl(
     override val connectionEvents: Flow<ConnectionEvent> = _connectionEvents.asSharedFlow()
 
     override val connectionState: Flow<ConnectionState> = mqttClient.connectionState
-
-    override val messages: Flow<BrokerMessage> = mqttClient.messages.map { msg ->
-        BrokerMessage(topic = msg.topic, payload = msg.payload)
-    }
 
     init {
         scope.launch {
