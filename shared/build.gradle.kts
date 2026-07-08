@@ -99,6 +99,10 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.mockk)
+            implementation(libs.turbine)
+            implementation(libs.truth)
         }
         jsMain.dependencies {
             implementation(libs.wrappers.browser)

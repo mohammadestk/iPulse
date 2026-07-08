@@ -8,6 +8,7 @@ import dev.esteki.ipulse.data.model.TelemetryPayload
 import dev.esteki.ipulse.data.model.toDecodedTelemetry
 import dev.esteki.ipulse.data.remote.MqttClientBase
 import dev.esteki.ipulse.domain.model.Device
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,13 +23,14 @@ class TelemetryIngestionService(
     private val mqttClient: MqttClientBase,
     private val deviceDao: DeviceDao,
     private val readingDao: TelemetryReadingDao,
-    private val json: Json
+    private val json: Json,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
     private var scope: CoroutineScope? = null
 
     fun start() {
         if (scope != null) return
-        scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+        scope = CoroutineScope(dispatcher + SupervisorJob())
         scope!!.launch { ingest() }
     }
 
